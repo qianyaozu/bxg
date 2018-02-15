@@ -1,17 +1,23 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gordonklaus/portaudio"
 )
 
 var (
-	Port = "12345"
+	Port                                     = "12345"
+	sampleRate         float64               = 44100
+	defaultInputDevice *portaudio.DeviceInfo = nil //默认输入设备
+	defaultOutDevice   *portaudio.DeviceInfo = nil //默认输出设备
+	reveiveQueue                             = make(chan byte, 10000)
+	sendQueue                                = make(chan byte, 10000)
+	voiceExit                                = make(chan int, 1)
 )
 
 func main() {
-	portaudio.Initialize()
-	fmt.Println(portaudio.DefaultOutputDevice())
-	defer portaudio.Terminate()
+
+	go startVoice()
+
+	handlerSocketServer()
 	handleServer()
 }
