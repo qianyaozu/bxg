@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/qianyaozu/bxg/dal"
 	. "github.com/qianyaozu/qcommon"
 	"net/http"
 	"strings"
@@ -27,7 +28,7 @@ import (
 func handleServer() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	router.POST("/Upload", Upload)			 //POST http://192.168.2.1:12345/Upload?mac=33:01:80:09:ed:72
+	router.POST("/Upload", Upload)            //POST http://192.168.2.1:12345/Upload?mac=33:01:80:09:ed:72
 	router.GET("/CheckTime", CheckTime)       //GET http://192.168.2.1:12345/CheckTime
 	router.GET("/CheckVersion", CheckVersion) //GET http://192.168.2.1:12345/CheckVersion?mac=33:01:80:09:ed:72&version=1.0.0
 	router.POST("/Close", Close)              //POST http://192.168.2.1:12345/Close?mac=33:01:80:09:ed:72
@@ -52,10 +53,15 @@ func CheckVersion(c *gin.Context) {
 		c.JSON(http.StatusOK, ResponseJson("", errors.New("mac or version can't be empty")))
 		return
 	}
-	if v == "1.0.0" {
+	item, err := dal.CabinetInfo_GetOne(mac)
+	if err != nil {
+		c.JSON(http.StatusOK, ResponseJson("", err))
+		return
+	}
+	if v == item.Version {
 		c.JSON(http.StatusOK, ResponseJson("", nil))
 	} else {
-		c.JSON(http.StatusOK, ResponseJson("/files/1.0.1.apk", nil))
+		c.JSON(http.StatusOK, ResponseJson("/files/"+item.Version+".apk", nil))
 	}
 }
 
@@ -93,12 +99,10 @@ func Open(c *gin.Context) {
 		return
 	}
 	//校验参数
-
-	if login.Method == 0 && login.Password != "" {
+	if login.Method == 0 && login.Password == "" {
 		c.JSON(http.StatusOK, ResponseJson(nil, errors.New("wrong password")))
 		return
 	}
-
 	c.JSON(http.StatusOK, ResponseJson("waiting for review", nil))
 }
 
@@ -148,8 +152,15 @@ func Heart(c *gin.Context) {
 	//2.拒绝打开
 	//3.开启报警
 	//4.关闭警报
+	//5.等待审核
+	//6.申请语音
 
 	c.JSON(http.StatusOK, ResponseJson(0, nil))
 }
 
 //endregion
+
+type Cmder struct {
+	CabinetID string
+	CmdType   int
+}

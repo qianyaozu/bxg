@@ -16,8 +16,8 @@ var (
 
 func main() {
 
-	go startVoice()
+	//go startVoice()
 
-	handlerSocketServer()
+	//handlerSocketServer()
 	handleServer()
 }
