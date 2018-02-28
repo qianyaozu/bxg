@@ -3,3 +3,10 @@
 ################################################################################
 
 *.suo
+*.dll
+*.pdb
+*.xml
+/CabinetAPI/CabinetData/obj/Debug
+/CabinetAPI/CabinetUtility/obj/Debug
+/CabinetAPI/packages
+/CabinetAPI/CabinetAPI/obj/Debug
