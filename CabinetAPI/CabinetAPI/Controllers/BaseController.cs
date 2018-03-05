@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -9,6 +10,7 @@ namespace CabinetAPI.Controllers
 {
     public class BaseController : ApiController
     {
+        public Logger logger = LogManager.GetCurrentClassLogger();
         #region Action返回结果通用方法
         /// <summary>
         /// 返回成功数据
@@ -67,18 +69,7 @@ namespace CabinetAPI.Controllers
 
         #region Session操作
 
-        /// <summary>
-        /// 写Session
-        /// </summary>
-        /// <typeparam name="T">Session键值的类型</typeparam>
-        /// <param name="key">Session的键名</param>
-        /// <param name="value">Session的键值</param>
-        public void WriteSession<T>(string key, T value)
-        {
-            if (string.IsNullOrEmpty(key))
-                return;
-            HttpContext.Current.Session[key] = value;
-        }
+
 
         /// <summary>
         /// 写Session
@@ -87,20 +78,24 @@ namespace CabinetAPI.Controllers
         /// <param name="value">Session的键值</param>
         public void WriteSession(string key, string value)
         {
-            WriteSession<string>(key, value);
+            if (string.IsNullOrEmpty(key))
+                return;
+            HttpContext.Current.Session[key] = value;
         }
 
         /// <summary>
         /// 读取Session的值
         /// </summary>
         /// <param name="key">Session的键名</param>        
-        public object GetSession(string key)
+        public string GetSession(string key)
         {
             if (string.IsNullOrEmpty(key))
                 return null;
-            return HttpContext.Current.Session[key];
+            if (HttpContext.Current.Session[key] == null)
+                return null;
+            return HttpContext.Current.Session[key].ToString();
         }
-        
+
 
         /// <summary>
         /// 删除指定Session
@@ -113,6 +108,26 @@ namespace CabinetAPI.Controllers
             HttpContext.Current.Session.Contents.Remove(key);
         }
 
+        #endregion
+
+        #region 获取请求IP
+        public string GetIP()
+        {
+            string result = HttpContext.Current.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+            if (string.IsNullOrEmpty(result))
+            {
+                result = HttpContext.Current.Request.ServerVariables["REMOTE_ADDR"];
+            }
+            if (string.IsNullOrEmpty(result))
+            {
+                result = HttpContext.Current.Request.UserHostAddress;
+            }
+            if (string.IsNullOrEmpty(result))
+            {
+                return "0.0.0.0";
+            }
+            return result;
+        }
         #endregion
     }
 }

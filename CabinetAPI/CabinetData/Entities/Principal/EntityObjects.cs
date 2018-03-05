@@ -102,7 +102,10 @@ namespace CabinetData.Entities
 		/// </summary>
 		public String Remark { get; set; }
 
-	}
+        public DateTime? CreateTime { get; set; }
+         
+
+    }
 
 	public partial class CabinetLog : BaseModel
 	{
@@ -169,50 +172,8 @@ namespace CabinetData.Entities
 
 	}
 
-	public partial class Module : BaseModel
-	{
-
-		/// <summary>
-		/// 
-		/// </summary>
-		public Int32 ID { get; set; }
-
-		/// <summary>
-		/// 
-		/// </summary>
-		public Int32? ParentID { get; set; }
-
-		/// <summary>
-		/// 
-		/// </summary>
-		public String Name { get; set; }
-
-		/// <summary>
-		/// 
-		/// </summary>
-		public String Desciptiong { get; set; }
-
-	}
-
-	public partial class Role : BaseModel
-	{
-
-		/// <summary>
-		/// 
-		/// </summary>
-		public Int32 ID { get; set; }
-
-		/// <summary>
-		/// 
-		/// </summary>
-		public String Name { get; set; }
-
-		/// <summary>
-		/// 
-		/// </summary>
-		public String Remark { get; set; }
-
-	}
+	 
+ 
 
 	public partial class Role_Module : BaseModel
 	{

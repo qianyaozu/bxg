@@ -51,16 +51,21 @@
   <ItemGroup>
     <Compile Include="Base\BaseDap.cs" />
     <Compile Include="Base\BaseModel.cs" />
+    <Compile Include="Base\PageExtensions.cs" />
     <Compile Include="Entities\Database.cs" />
     <Compile Include="Entities\Principal\BaseEnum.cs" />
     <Compile Include="Entities\Principal\DapperAccessPricipal.cs" />
     <Compile Include="Entities\Principal\EntityObjects.cs" />
+    <Compile Include="Entities\QueryEntities\SytemLogSearchModel.cs" />
+    <Compile Include="Entities\QueryEntities\CabinetLogSearchModel.cs" />
+    <Compile Include="Entities\QueryEntities\DepartmentSearchModel.cs" />
     <Compile Include="Entities\QueryEntities\LoginModel.cs" />
+    <Compile Include="Entities\QueryEntities\Page.cs" />
+    <Compile Include="Entities\QueryEntities\CabinetSearchModel.cs" />
+    <Compile Include="Entities\QueryEntities\UserSearchModel.cs" />
     <Compile Include="Entities\UserEntities\CabinetEntity.cs" />
     <Compile Include="Entities\UserEntities\CabinetLogEntity.cs" />
     <Compile Include="Entities\UserEntities\DepartmentEntity.cs" />
-    <Compile Include="Entities\UserEntities\ModuleEntity.cs" />
-    <Compile Include="Entities\UserEntities\RoleEntity.cs" />
     <Compile Include="Entities\UserEntities\Role_ModuleEntity.cs" />
     <Compile Include="Entities\UserEntities\SystemLogEntity.cs" />
     <Compile Include="Entities\UserEntities\UserInfoEntity.cs" />

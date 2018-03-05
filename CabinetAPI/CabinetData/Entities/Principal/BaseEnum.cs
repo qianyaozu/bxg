@@ -24,6 +24,28 @@ namespace CabinetData.Entities.Principal
         修改密码 = 11,
         设置参数 = 12,
         上线 = 13,
-        下线 = 14
+        下线 = 14,
+        请求语音 = 15,
+        结束语音 = 16,
+        心跳 = 17,
     }
+
+    /// <summary>
+    /// 角色枚举
+    /// </summary>
+    public enum RoleEnum
+    {
+        超级管理员 = 1,
+        管理员 = 2,
+    }
+
+    public enum ModuleEnum
+    {
+        用户管理 = 0,
+        部门管理 = 1,
+        保险柜管理 = 2,
+        系统日志 = 3,
+        保险柜日志 = 4,
+    }
+
 }
