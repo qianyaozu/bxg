@@ -1,9 +1,12 @@
-﻿using CabinetData.Entities;
+﻿using CabinetAPI.Filter;
+using CabinetData.Entities;
 using CabinetData.Entities.Principal;
 using CabinetData.Entities.QueryEntities;
+using CabinetUtility;
 using CabinetUtility.Encryption;
 using NLog;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -11,9 +14,10 @@ using System.Web.Http;
 
 namespace CabinetAPI.Controllers
 {
+    [TokenFilter]
     public class UserController : BaseController
     {
-
+        //public static ConcurrentDictionary<string, UserInfo> UserDictionary = new ConcurrentDictionary<string, UserInfo>();
 
         /// <summary>
         /// 登录
@@ -32,10 +36,33 @@ namespace CabinetAPI.Controllers
                 return Failure("用户名不存在");
             if (user.Password != AESAlgorithm.Encrypto(model.Password))
                 return Failure("密码错误");
-            WriteSession("UserID", user.ID.ToString());
-            WriteSession("RoleID", user.RoleID.ToString());
-            WriteSession("DepartmentID", user.DepartmentID.ToString());
-            return Success(Role_Module.Get(user.RoleID));//返回用户权限
+            var token = Guid.NewGuid().ToString();
+           
+
+            
+            SystemLog.Add(new SystemLog
+            {
+                Action = "Login",
+                LogContent = user.Name + "-登录成功",
+                CreateTime = DateTime.Now,
+                UserID = user.ID,
+                RoleID = user.RoleID,
+                DepartmentID = user.DepartmentID,
+                ClientIP = GetIP(),
+                UserName = user.Name,
+                RealName = user.RealName
+            });
+            var data = new
+            {
+                UserID = user.ID,
+                RoleName = user.RoleID == 1 ? "admin" : "user",//1是超管，2是用户
+                RealName = user.RealName,
+                //RoleModel = Role_Module.Get(user.RoleID),
+            };
+             
+            WriteCookie("token", token);
+            CacheHelper.SetCache("token", user, new TimeSpan(48, 0, 0)); 
+            return Success(data);//返回用户权限
         }
 
         /// <summary>
@@ -46,9 +73,26 @@ namespace CabinetAPI.Controllers
         [HttpPost, Route("api/user/logout")]
         public IHttpActionResult Logout(LoginModel model)
         {
-            RemoveSession("UserID");
-            RemoveSession("RoleID");
-            RemoveSession("DepartmentID");
+            UserInfo user= CacheHelper.GetCache(GetCookie("token") ) as UserInfo;
+            if (user==null)
+            {
+                return Failure("登录失效");
+            }
+            SystemLog.Add(new SystemLog
+            {
+                Action = "Logout",
+                LogContent = user.Name + "-退出登录",
+                CreateTime = DateTime.Now,
+                UserID = user.ID,
+                RoleID = user.RoleID,
+                DepartmentID = user.DepartmentID,
+                ClientIP = GetIP(),
+                UserName = user.Name,
+                RealName = user.RealName
+            });
+            CacheHelper.SetCache(GetCookie("token"), null, new TimeSpan(0, 0, 1));
+           
+            WriteCookie("token", "", -1);
             return Success(true);
         }
 
@@ -57,11 +101,36 @@ namespace CabinetAPI.Controllers
         {
             try
             {
+                
                 string valiate = ValiateUserModel(user);
                 if (!string.IsNullOrEmpty(valiate))
                 {
                     return Failure(valiate);
                 }
+                if (UserInfo.GetOne(user.Name) != null)
+                {
+                    return Failure("该用户名已经存在");
+                }
+
+
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Failure("登录失效");
+                }
+                SystemLog.Add(new SystemLog
+                {
+                    Action = "AddUser",
+                    LogContent = userCookie.Name + "-新增用户-" + user.Name,
+                    CreateTime = DateTime.Now,
+                    UserID = userCookie.ID,
+                    RoleID = userCookie.RoleID,
+                    DepartmentID = userCookie.DepartmentID,
+                    ClientIP = GetIP(),
+                    UserName = userCookie.Name,
+                    RealName = userCookie.RealName
+                });
+
                 user.CreateTime = DateTime.Now;
                 user.RoleID = (int)RoleEnum.管理员;
                 UserInfo.Add(user);
@@ -100,6 +169,7 @@ namespace CabinetAPI.Controllers
         {
             try
             {
+               
                 string valiate = ValiateUserModel(user);
                 if (!string.IsNullOrEmpty(valiate))
                 {
@@ -110,6 +180,31 @@ namespace CabinetAPI.Controllers
                 var us = UserInfo.GetOne(user.ID);
                 if (us == null)
                     return Failure("未找到指定用户");
+
+                var old = UserInfo.GetOne(user.Name);
+                if (old != null&&old.ID!=user.ID)
+                {
+                    return Failure("该用户名已经被使用");
+                }
+
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Failure("登录失效");
+                }
+                SystemLog.Add(new SystemLog
+                {
+                    Action = "EditUser",
+                    LogContent = userCookie.Name + "-编辑用户-" + user.Name,
+                    CreateTime = DateTime.Now,
+                    UserID = userCookie.ID,
+                    RoleID = userCookie.RoleID,
+                    DepartmentID = userCookie.DepartmentID,
+                    ClientIP = GetIP(),
+                    UserName = userCookie.Name,
+                    RealName = userCookie.RealName
+                });
+
                 us.Name = user.Name;
                 us.Password = AESAlgorithm.Encrypto(user.Password);
                 us.DepartmentID = user.DepartmentID;
@@ -128,15 +223,33 @@ namespace CabinetAPI.Controllers
         }
 
         [HttpPost, Route("api/user/delete")]
-        public IHttpActionResult DeleteUser(int userID)
+        public IHttpActionResult DeleteUser(int UserID)
         {
-            if (userID == 0)
+            if (UserID == 0)
             {
                 return Failure("未指定用户");
             }
+
             try
             {
-                UserInfo.Delete(userID);
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Failure("登录失效");
+                }
+                SystemLog.Add(new SystemLog
+                {
+                    Action = "DeleteUser",
+                    LogContent = userCookie.Name + "-删除用户-" + UserID,
+                    CreateTime = DateTime.Now,
+                    UserID = userCookie.ID,
+                    RoleID = userCookie.RoleID,
+                    DepartmentID = userCookie.DepartmentID,
+                    ClientIP = GetIP(),
+                    UserName = userCookie.Name,
+                    RealName = userCookie.RealName
+                });
+                UserInfo.Delete(UserID);
                 return Success(true);
             }
             catch (Exception ex)

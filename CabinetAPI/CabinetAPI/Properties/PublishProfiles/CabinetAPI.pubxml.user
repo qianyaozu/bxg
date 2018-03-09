@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+您 Web 项目的发布/打包进程将使用此文件。您可以通过编辑此 MSBuild 文件
+来自定义该进程的行为。若要了解与此相关的详细信息，请访问 http://go.microsoft.com/fwlink/?LinkID=208121。
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TimeStampOfAssociatedLegacyPublishXmlFile />
+    <_PublishTargetUrl>D:\publish\cabinetapi</_PublishTargetUrl>
+  </PropertyGroup>
+  <ItemGroup>
+    <File Include="bin/CabinetAPI.dll">
+      <publishTime>03/05/2018 19:22:41</publishTime>
+    </File>
+    <File Include="bin/CabinetData.dll">
+      <publishTime>03/05/2018 19:22:41</publishTime>
+    </File>
+    <File Include="bin/CabinetUtility.dll">
+      <publishTime>03/05/2018 19:22:41</publishTime>
+    </File>
+    <File Include="bin/Dapper.dll">
+      <publishTime>11/25/2017 18:18:42</publishTime>
+    </File>
+    <File Include="bin/DapperExtensions.dll">
+      <publishTime>08/08/2017 22:38:30</publishTime>
+    </File>
+    <File Include="bin/Newtonsoft.Json.dll">
+      <publishTime>08/03/2014 20:33:56</publishTime>
+    </File>
+    <File Include="bin/NLog.config">
+      <publishTime>03/05/2018 10:24:24</publishTime>
+    </File>
+    <File Include="bin/NLog.dll">
+      <publishTime>02/27/2018 23:35:06</publishTime>
+    </File>
+    <File Include="bin/System.Net.Http.Formatting.dll">
+      <publishTime>02/01/2018 12:17:18</publishTime>
+    </File>
+    <File Include="bin/System.Web.Http.dll">
+      <publishTime>02/01/2018 12:17:40</publishTime>
+    </File>
+    <File Include="bin/System.Web.Http.WebHost.dll">
+      <publishTime>02/01/2018 12:19:26</publishTime>
+    </File>
+    <File Include="Global.asax">
+      <publishTime>02/28/2018 14:19:19</publishTime>
+    </File>
+    <File Include="NLog.config">
+      <publishTime>03/05/2018 10:24:24</publishTime>
+    </File>
+    <File Include="packages.config">
+      <publishTime>03/05/2018 10:24:24</publishTime>
+    </File>
+    <File Include="Web.config">
+      <publishTime>03/05/2018 19:22:41</publishTime>
+    </File>
+  </ItemGroup>
+</Project>

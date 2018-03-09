@@ -55,7 +55,7 @@ namespace CabinetData.Entities
 		/// <summary>
 		/// 
 		/// </summary>
-		public String Status { get; set; }
+		public int? Status { get; set; }
 
 		/// <summary>
 		/// 是否需要确认开门
@@ -253,7 +253,10 @@ namespace CabinetData.Entities
 		/// </summary>
 		public String Remark { get; set; }
 
-	}
+
+        public string CenterIP { get; set; }
+
+    }
 
 	public partial class UserInfo : BaseModel
 	{
@@ -314,7 +317,7 @@ namespace CabinetData.Entities
 		public DateTime? CreateTime { get; set; }
 
 		/// <summary>
-		/// 
+		/// 1为启用，0为禁用
 		/// </summary>
 		public Int32? Status { get; set; }
 
@@ -361,12 +364,12 @@ namespace CabinetData.Entities
 		/// <summary>
 		/// 
 		/// </summary>
-		public String DepartmentName { get; set; }
+		public int DepartmentID { get; set; }
 
 		/// <summary>
 		/// 
 		/// </summary>
-		public String RoleName { get; set; }
+		public int RoleID { get; set; }
 
 		/// <summary>
 		/// 

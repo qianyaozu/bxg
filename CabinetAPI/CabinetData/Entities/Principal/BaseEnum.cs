@@ -28,6 +28,8 @@ namespace CabinetData.Entities.Principal
         请求语音 = 15,
         结束语音 = 16,
         心跳 = 17,
+        接受语音=18,
+        拒绝语音=19
     }
 
     /// <summary>

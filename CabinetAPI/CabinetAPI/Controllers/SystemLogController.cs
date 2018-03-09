@@ -1,4 +1,5 @@
-﻿using CabinetData.Entities;
+﻿using CabinetAPI.Filter;
+using CabinetData.Entities;
 using CabinetData.Entities.QueryEntities;
 using NLog;
 using System;
@@ -9,6 +10,7 @@ using System.Web.Http;
 
 namespace CabinetAPI.Controllers
 {
+    [TokenFilter]
     public class SystemLogController: BaseController
     {
 

@@ -1,5 +1,7 @@
-﻿using CabinetData.Entities;
+﻿using CabinetAPI.Filter;
+using CabinetData.Entities;
 using CabinetData.Entities.QueryEntities;
+using CabinetUtility;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -9,26 +11,25 @@ using System.Web.Http;
 
 namespace CabinetAPI.Controllers
 {
+    [TokenFilter]
     public class DepartmentController : BaseController
     {
-
-
         /// <summary>
         /// 获取登录用户的部门树
         /// </summary>
         /// <returns></returns>
-        [HttpPost, Route("api/department/tree")]
+        [HttpGet, Route("api/department/tree")]
         public IHttpActionResult Tree()
-        {
-            string userId = GetSession("UserID") ?? "";
-            string roleId = GetSession("RoleID") ?? "";
-            string departmentId = GetSession("DepartmentID") ?? "";
-            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(roleId) || string.IsNullOrEmpty(departmentId))
-                return Failure("登录过期,请重新登录");
+        { 
             try
             {
-                List<int> list = Department.GetChildrenID(new List<int> { Int32.Parse(departmentId) });
-                if(list.Count==0)
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Failure("登录失效");
+                }
+                List<int> list = Department.GetChildrenID(new List<int> { userCookie.DepartmentID });
+                if (list.Count == 0)
                     return Failure("查询错误");
                 return Success(Department.GetAll(list));
             }
@@ -51,6 +52,28 @@ namespace CabinetAPI.Controllers
                 {
                     return Failure(valiate);
                 }
+                
+                if (Department.GetOne(depart.Name) != null)
+                    return Failure("该部门已经存在");
+
+
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Failure("登录失效");
+                }
+                SystemLog.Add(new SystemLog
+                {
+                    Action = "AddDepartment",
+                    LogContent = userCookie.Name + "-新增部门-" + depart.Name,
+                    CreateTime = DateTime.Now,
+                    UserID = userCookie.ID,
+                    RoleID = userCookie.RoleID,
+                    DepartmentID = userCookie.DepartmentID,
+                    ClientIP = GetIP(),
+                    UserName = userCookie.Name,
+                    RealName = userCookie.RealName
+                });
                 Department.Add(depart);
                 return Success(true);
             }
@@ -70,7 +93,7 @@ namespace CabinetAPI.Controllers
         private string ValiateDepartmentModel(Department depart)
         {
             if (depart == null)
-                return "参数错误"; 
+                return "参数错误";
             if (string.IsNullOrEmpty(depart.Name))
                 return "请设置部门名称";
             return null;
@@ -91,6 +114,30 @@ namespace CabinetAPI.Controllers
                 var dp = Department.GetOne(depart.ID);
                 if (dp == null)
                     return Failure("未找到指定部门");
+
+                var old = Department.GetOne(depart.Name);
+                if (old != null && old.ID != depart.ID)
+                    return Failure("该部门名称已经被使用");
+
+
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Failure("登录失效");
+                }
+                SystemLog.Add(new SystemLog
+                {
+                    Action = "EditDepartment",
+                    LogContent = userCookie.Name + "-编辑部门-" + depart.ID,
+                    CreateTime = DateTime.Now,
+                    UserID = userCookie.ID,
+                    RoleID = userCookie.RoleID,
+                    DepartmentID = userCookie.DepartmentID,
+                    ClientIP = GetIP(),
+                    UserName = userCookie.Name,
+                    RealName = userCookie.RealName
+                });
+                dp.CenterIP = depart.CenterIP;
                 dp.Name = depart.Name;
                 dp.ParentID = depart.ParentID;
                 dp.Remark = depart.Remark;
@@ -114,6 +161,24 @@ namespace CabinetAPI.Controllers
             }
             try
             {
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Failure("登录失效");
+                }
+                SystemLog.Add(new SystemLog
+                {
+                    Action = "DeleteDepartment",
+                    LogContent = userCookie.Name + "-删除部门-" + departID,
+                    CreateTime = DateTime.Now,
+                    UserID = userCookie.ID,
+                    RoleID = userCookie.RoleID,
+                    DepartmentID = userCookie.DepartmentID,
+                    ClientIP = GetIP(),
+                    UserName = userCookie.Name,
+                    RealName = userCookie.RealName
+                });
+
                 Department.Delete(departID);
                 return Success(true);
             }

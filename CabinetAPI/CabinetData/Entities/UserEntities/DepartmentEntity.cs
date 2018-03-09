@@ -46,6 +46,15 @@ namespace CabinetData.Entities
                 return cn.Query<Department>(sql, new { ID = id }).FirstOrDefault();
             }
         }
+        public static Department GetOne(string name)
+        {
+            var sql = "select * from Department where Name=@Name ";
+            using (var cn = Database.GetDbConnection())
+            {
+                return cn.Query<Department>(sql, new { Name = name }).FirstOrDefault();
+            }
+        }
+
         public static bool Delete(int id)
         {
             var sql = "delete from Department where ID=@ID ";

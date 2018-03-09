@@ -42,5 +42,8 @@ namespace CabinetData.Entities
                 cn.Insert<SystemLog>(log);
             }
         }
+
+
+        
     }
 }

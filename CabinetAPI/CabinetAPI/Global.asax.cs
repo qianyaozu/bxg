@@ -19,6 +19,7 @@ namespace CabinetAPI
         protected void Application_Start()
         {
             GlobalConfiguration.Configure(WebApiConfig.Register);
+            InitDB();
             Task.Factory.StartNew(SyncCabinet);
         }
         private void SyncCabinet()
@@ -36,7 +37,7 @@ namespace CabinetAPI
                     {
                         if (cabinet.IsOnline ?? false)//不在线
                         {
-                            if (AndroidController.heartDictionary.ContainsKey(cabinet.ID) && AndroidController.heartDictionary[cabinet.ID].AddSeconds(30) > DateTime.Now)//如果存在
+                            if (AndroidController.HeartDictionary.ContainsKey(cabinet.ID) && AndroidController.HeartDictionary[cabinet.ID].AddSeconds(30) > DateTime.Now)//如果存在
                             {
                                 //上线
                                 onLine.Add(cabinet.ID);
@@ -52,7 +53,7 @@ namespace CabinetAPI
                                 });
                             }
                         }
-                        else if ((AndroidController.heartDictionary.ContainsKey(cabinet.ID) && AndroidController.heartDictionary[cabinet.ID].AddSeconds(30) < DateTime.Now) || !AndroidController.heartDictionary.ContainsKey(cabinet.ID))
+                        else if ((AndroidController.HeartDictionary.ContainsKey(cabinet.ID) && AndroidController.HeartDictionary[cabinet.ID].AddSeconds(30) < DateTime.Now) || !AndroidController.HeartDictionary.ContainsKey(cabinet.ID))
                         {
                             //下线
                             offLine.Add(cabinet.ID);
@@ -83,6 +84,36 @@ namespace CabinetAPI
                 {
                     Thread.Sleep(30000);
                 }
+            }
+        }
+
+        private void InitDB()
+        {
+            Department depart = Department.GetOne("根组织");
+            if (depart == null)
+            {
+                Department.Add(new Department
+                {
+                    Name = "根组织",
+                    ParentID = null,
+                    Remark = "不可删除",
+                    SortID = 0
+                });
+                depart = Department.GetOne("根组织");
+            }
+            UserInfo user = UserInfo.GetOne("admin");
+            if (user == null)
+            {
+                UserInfo.Add(new UserInfo
+                {
+                    Name = "admin",
+                    RoleID = 1,
+                    DepartmentID = depart.ID,
+                    Password = CabinetUtility.Encryption.AESAlgorithm.Encrypto("admin"),
+                    RealName = "管理员",
+                    CreateTime = DateTime.Now,
+                    Status = 1
+                });
             }
         }
     }

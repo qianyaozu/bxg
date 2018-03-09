@@ -1,5 +1,7 @@
-﻿using CabinetData.Entities;
+﻿using CabinetAPI.Filter;
+using CabinetData.Entities;
 using CabinetData.Entities.QueryEntities;
+using CabinetUtility;
 using CabinetUtility.Encryption;
 using NLog;
 using System;
@@ -10,11 +12,9 @@ using System.Web.Http;
 
 namespace CabinetAPI.Controllers
 {
+    [TokenFilter]
     public class CabinetController : BaseController
     {
-
-        
-
         [HttpPost, Route("api/cabinet/add")]
         public IHttpActionResult AddCabinet(Cabinet cabinet)
         {
@@ -25,6 +25,29 @@ namespace CabinetAPI.Controllers
                 {
                     return Failure(valiate);
                 }
+                if (Cabinet.GetByName(cabinet.Name) != null)
+                    return Failure("该名称已经被使用");
+                if (Cabinet.GetByMac(cabinet.AndroidMac) != null)
+                    return Failure("该硬件编码已经被使用");
+
+
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Failure("登录失效");
+                }
+                SystemLog.Add(new SystemLog
+                {
+                    Action = "AddCabinet",
+                    LogContent = userCookie.Name + "-新增保险柜-" + cabinet.Name,
+                    CreateTime = DateTime.Now,
+                    UserID = userCookie.ID,
+                    RoleID = userCookie.RoleID,
+                    DepartmentID = userCookie.DepartmentID,
+                    ClientIP = GetIP(),
+                    UserName = userCookie.Name,
+                    RealName = userCookie.RealName
+                });
                 cabinet.CreateTime = DateTime.Now;
                 cabinet.IsOnline = false;
                 Cabinet.Add(cabinet);
@@ -35,7 +58,6 @@ namespace CabinetAPI.Controllers
                 logger.Error(ex);
                 return Failure("新增失败");
             }
-
         }
 
         /// <summary>
@@ -77,6 +99,31 @@ namespace CabinetAPI.Controllers
                 var cab = Cabinet.GetOne(cabinet.ID);
                 if (cab == null)
                     return Failure("未找到指定保险柜");
+                var old = Cabinet.GetByName(cabinet.Name);
+                if (old != null&& old.ID!=cabinet.ID) 
+                    return Failure("该名称已经被使用");
+
+                old = Cabinet.GetByMac(cabinet.AndroidMac);
+                if (old != null && old.ID != cabinet.ID)
+                    return Failure("该硬件编码已经被使用");
+
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Failure("登录失效");
+                }
+                SystemLog.Add(new SystemLog
+                {
+                    Action = "EditCabinet",
+                    LogContent = userCookie.Name + "-编辑保险柜-" + cabinet.ID,
+                    CreateTime = DateTime.Now,
+                    UserID = userCookie.ID,
+                    RoleID = userCookie.RoleID,
+                    DepartmentID = userCookie.DepartmentID,
+                    ClientIP = GetIP(),
+                    UserName = userCookie.Name,
+                    RealName = userCookie.RealName
+                });
                 cab.Address = cabinet.Address;
                 cab.AndroidMac = cabinet.AndroidMac;
                 cab.Code = cabinet.Code;
@@ -113,8 +160,26 @@ namespace CabinetAPI.Controllers
             }
             try
             {
-                Cabinet.Delete(cabinetID);
-                return Success(true);
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Failure("登录失效");
+                }
+                SystemLog.Add(new SystemLog
+                {
+                    Action = "DeleteCabinet",
+                    LogContent = userCookie.Name + "-删除保险柜-" + cabinetID,
+                    CreateTime = DateTime.Now,
+                    UserID = userCookie.ID,
+                    RoleID = userCookie.RoleID,
+                    DepartmentID = userCookie.DepartmentID,
+                    ClientIP = GetIP(),
+                    UserName = userCookie.Name,
+                    RealName = userCookie.RealName
+                });
+                if (Cabinet.Delete(cabinetID))
+                    return Success(true);
+                return Failure("删除失败");
             }
             catch (Exception ex)
             {

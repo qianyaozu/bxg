@@ -67,48 +67,7 @@ namespace CabinetAPI.Controllers
         }
         #endregion
 
-        #region Session操作
-
-
-
-        /// <summary>
-        /// 写Session
-        /// </summary>
-        /// <param name="key">Session的键名</param>
-        /// <param name="value">Session的键值</param>
-        public void WriteSession(string key, string value)
-        {
-            if (string.IsNullOrEmpty(key))
-                return;
-            HttpContext.Current.Session[key] = value;
-        }
-
-        /// <summary>
-        /// 读取Session的值
-        /// </summary>
-        /// <param name="key">Session的键名</param>        
-        public string GetSession(string key)
-        {
-            if (string.IsNullOrEmpty(key))
-                return null;
-            if (HttpContext.Current.Session[key] == null)
-                return null;
-            return HttpContext.Current.Session[key].ToString();
-        }
-
-
-        /// <summary>
-        /// 删除指定Session
-        /// </summary>
-        /// <param name="key">Session的键名</param>
-        public void RemoveSession(string key)
-        {
-            if (string.IsNullOrEmpty(key))
-                return;
-            HttpContext.Current.Session.Contents.Remove(key);
-        }
-
-        #endregion
+        
 
         #region 获取请求IP
         public string GetIP()

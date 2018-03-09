@@ -1,0 +1,8 @@
+D:\github.com\bxg\CabinetAPI\CabinetData\bin\Release\CabinetData.dll
+D:\github.com\bxg\CabinetAPI\CabinetData\bin\Release\CabinetData.pdb
+D:\github.com\bxg\CabinetAPI\CabinetData\bin\Release\Dapper.dll
+D:\github.com\bxg\CabinetAPI\CabinetData\bin\Release\DapperExtensions.dll
+D:\github.com\bxg\CabinetAPI\CabinetData\bin\Release\Dapper.xml
+D:\github.com\bxg\CabinetAPI\CabinetData\bin\Release\DapperExtensions.pdb
+D:\github.com\bxg\CabinetAPI\CabinetData\obj\Release\CabinetData.dll
+D:\github.com\bxg\CabinetAPI\CabinetData\obj\Release\CabinetData.pdb
