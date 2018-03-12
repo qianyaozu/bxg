@@ -14,11 +14,13 @@ using System.Web.Http;
 
 namespace CabinetAPI.Controllers
 {
+    /// <summary>
+    /// 用户信息接口
+    /// </summary>
     [TokenFilter]
     public class UserController : BaseController
     {
-        //public static ConcurrentDictionary<string, UserInfo> UserDictionary = new ConcurrentDictionary<string, UserInfo>();
-
+         
         /// <summary>
         /// 登录
         /// </summary>
@@ -96,6 +98,11 @@ namespace CabinetAPI.Controllers
             return Success(true);
         }
 
+        /// <summary>
+        /// 新增用户
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         [HttpPost, Route("api/user/add")]
         public IHttpActionResult AddUser(UserInfo user)
         {
@@ -164,6 +171,11 @@ namespace CabinetAPI.Controllers
             return null;
         }
 
+        /// <summary>
+        /// 编辑用户
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         [HttpPost, Route("api/user/edit")]
         public IHttpActionResult EditUser(UserInfo user)
         {
@@ -222,6 +234,11 @@ namespace CabinetAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// 删除用户
+        /// </summary>
+        /// <param name="UserID"></param>
+        /// <returns></returns>
         [HttpPost, Route("api/user/delete")]
         public IHttpActionResult DeleteUser(int UserID)
         {
@@ -259,6 +276,11 @@ namespace CabinetAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// 分页查询用户
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
         [HttpPost, Route("api/user/view")]
         public IHttpActionResult QueryUser(UserSearchModel search)
         {

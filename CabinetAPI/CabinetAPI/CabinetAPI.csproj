@@ -127,6 +127,7 @@
     <Compile Include="Controllers\DepartmentController.cs" />
     <Compile Include="Controllers\SystemLogController.cs" />
     <Compile Include="Controllers\UserController.cs" />
+    <Compile Include="Filter\HiddenApiFilter.cs" />
     <Compile Include="Filter\TokenActionFilter.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>

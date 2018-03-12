@@ -11,11 +11,14 @@ using System.Web.Http;
 
 namespace CabinetAPI.Controllers
 {
+    /// <summary>
+    /// 部门信息
+    /// </summary>
     [TokenFilter]
     public class DepartmentController : BaseController
     {
         /// <summary>
-        /// 获取登录用户的部门树
+        /// 获取登录用户的部门树(登陆用户的下级部门)
         /// </summary>
         /// <returns></returns>
         [HttpGet, Route("api/department/tree")]
@@ -40,7 +43,11 @@ namespace CabinetAPI.Controllers
             }
         }
 
-
+        /// <summary>
+        /// 新增部门
+        /// </summary>
+        /// <param name="depart"></param>
+        /// <returns></returns>
 
         [HttpPost, Route("api/department/add")]
         public IHttpActionResult AddDepartment(Department depart)
@@ -98,7 +105,11 @@ namespace CabinetAPI.Controllers
                 return "请设置部门名称";
             return null;
         }
-
+        /// <summary>
+        /// 修改部门
+        /// </summary>
+        /// <param name="depart"></param>
+        /// <returns></returns>
         [HttpPost, Route("api/department/edit")]
         public IHttpActionResult EditDepartment(Department depart)
         {
@@ -152,6 +163,11 @@ namespace CabinetAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// 删除部门
+        /// </summary>
+        /// <param name="departID"></param>
+        /// <returns></returns>
         [HttpPost, Route("api/department/delete")]
         public IHttpActionResult DeleteDepartment(int departID)
         {
@@ -189,6 +205,11 @@ namespace CabinetAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// 分页查询部门信息
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
         [HttpPost, Route("api/department/view")]
         public IHttpActionResult QueryDepartment(DepartmentSearchModel search)
         {

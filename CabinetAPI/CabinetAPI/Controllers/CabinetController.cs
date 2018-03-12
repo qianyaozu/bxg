@@ -12,9 +12,17 @@ using System.Web.Http;
 
 namespace CabinetAPI.Controllers
 {
+    /// <summary>
+    /// 保险柜信息
+    /// </summary>
     [TokenFilter]
     public class CabinetController : BaseController
     {
+        /// <summary>
+        /// 新增保险柜接口
+        /// </summary>
+        /// <param name="cabinet"></param>
+        /// <returns></returns>
         [HttpPost, Route("api/cabinet/add")]
         public IHttpActionResult AddCabinet(Cabinet cabinet)
         {
@@ -84,6 +92,11 @@ namespace CabinetAPI.Controllers
             return null;
         }
 
+        /// <summary>
+        /// 修改保险柜接口
+        /// </summary>
+        /// <param name="cabinet"></param>
+        /// <returns></returns>
         [HttpPost, Route("api/cabinet/edit")]
         public IHttpActionResult EditCabinet(Cabinet cabinet)
         {
@@ -151,6 +164,11 @@ namespace CabinetAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// 删除保险柜接口
+        /// </summary>
+        /// <param name="cabinetID"></param>
+        /// <returns></returns>
         [HttpPost, Route("api/cabinet/delete")]
         public IHttpActionResult DeleteCabinet(int cabinetID)
         {
@@ -188,6 +206,11 @@ namespace CabinetAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// 分页查询保险柜接口
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
         [HttpPost, Route("api/cabinet/view")]
         public IHttpActionResult QueryCabinet(CabinetSearchModel search)
         {

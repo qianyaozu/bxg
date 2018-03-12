@@ -1,4 +1,5 @@
-﻿using NLog;
+﻿using CabinetAPI.Filter;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace CabinetAPI.Controllers
     {
         public Logger logger = LogManager.GetCurrentClassLogger();
         #region Action返回结果通用方法
+        [HiddenApi]
         /// <summary>
         /// 返回成功数据
         /// </summary>
@@ -26,6 +28,7 @@ namespace CabinetAPI.Controllers
             };
             return Json<dynamic>(result);
         }
+        [HiddenApi]
         /// <summary>
         /// 返回失败数据
         /// </summary>

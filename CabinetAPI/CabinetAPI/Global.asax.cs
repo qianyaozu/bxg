@@ -29,6 +29,16 @@ namespace CabinetAPI
             {
                 try
                 {
+                    //删除5分钟之前的命令
+                    lock (AndroidController.logLock)
+                        AndroidController.CabinetLogQueue.RemoveAll(m => m.CreateTime.AddMinutes(5) < DateTime.Now);
+
+                }catch(Exception ex)
+                {
+                    logger.Error(ex);
+                }
+                try
+                {
                     List<int> onLine = new List<int>();
                     List<int> offLine = new List<int>();
                     List<CabinetData.Entities.CabinetLog> logs = new List<CabinetData.Entities.CabinetLog>();

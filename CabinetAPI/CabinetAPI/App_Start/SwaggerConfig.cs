@@ -8,6 +8,7 @@ using System.Collections.Generic;
 
 using CabinetAPI;
 using Swashbuckle.Application;
+using CabinetAPI.Filter;
 
 [assembly: PreApplicationStartMethod(typeof(SwaggerConfig), "Register")]
 
@@ -158,7 +159,7 @@ namespace CabinetAPI
                         // enum type. Swagger-Net will honor this change out-of-the-box. However, if you use a different
                         // approach to serialize enums as strings, you can also force Swagger-Net to describe them as strings.
                         //
-                       // c.DescribeAllEnumsAsStrings(camelCase: false);
+                        // c.DescribeAllEnumsAsStrings(camelCase: false);
 
                         // Similar to Schema filters, Swagger-Net also supports Operation and Document filters:
                         //
@@ -179,13 +180,13 @@ namespace CabinetAPI
                         // before using this option.
                         //
                         //c.DocumentFilter<ApplyDocumentVendorExtensions>();
-
+                        c.DocumentFilter<HiddenApiFilter>();
                         // In contrast to WebApi, Swagger 2.0 does not include the query string component when mapping a URL
                         // to an action. As a result, Swagger-Net will raise an exception if it encounters multiple actions
                         // with the same path (sans query string) and HTTP method. You can workaround this by providing a
                         // custom strategy to pick a winner or merge the descriptions for the purposes of the Swagger docs
                         //
-                        //c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+                        c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
 
                         // Wrap the default SwaggerGenerator with additional behavior (e.g. caching) or provide an
                         // alternative implementation for ISwaggerProvider with the CustomProvider option.
