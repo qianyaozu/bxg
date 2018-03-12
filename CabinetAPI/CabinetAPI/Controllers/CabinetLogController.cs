@@ -1,6 +1,7 @@
 ﻿using CabinetAPI.Filter;
 using CabinetData.Entities;
 using CabinetData.Entities.QueryEntities;
+using CabinetUtility;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -42,7 +43,7 @@ namespace CabinetAPI.Controllers
         /// </summary>
         /// <param name="time"></param>
         /// <returns></returns>
-        [HttpGet, Route("api/android/Command")]
+        [HttpGet, Route("api/cabinetlog/command")]
         public IHttpActionResult GetCommand(string time)
         {
             if (string.IsNullOrEmpty(time))
@@ -51,12 +52,20 @@ namespace CabinetAPI.Controllers
             }
             try
             {
+                var cache = CacheHelper.GetCache(GetCookie("token"));
+                if (cache == null)
+                    return Failure("登录失效");
+                UserInfo userCookie = cache as UserInfo;
+                if (userCookie == null)
+                    return Failure("登录失效");
                 DateTime lastTime = ConvertStringToDateTime(time);
                 var list = new List<CabinetLog>();
+                var departList = Department.GetChildrenID(new List<int>() { userCookie.DepartmentID });
                 lock (AndroidController.logLock)
-                    list = AndroidController.CabinetLogQueue.ToList().FindAll(m => m.CreateTime >= lastTime);
+                    list = AndroidController.CabinetLogQueue.ToList().FindAll(m => m.CreateTime >= lastTime && departList.Contains(m.DepartmentID ?? 0));
                 return Success(list);
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 logger.Error(ex);
                 return Failure("通讯异常");

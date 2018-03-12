@@ -192,6 +192,7 @@ namespace CabinetAPI.Controllers
                 var log = new CabinetLog
                 {
                     CabinetID = cabinet.ID,
+                    DepartmentID = cabinet.DepartmentID,
                     OperatorName = request.UserName,
                     OperateTime = DateTime.Now,
                     OperationType = request.OperatorType,

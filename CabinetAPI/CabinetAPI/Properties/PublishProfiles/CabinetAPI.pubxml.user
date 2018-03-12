@@ -10,13 +10,13 @@
   </PropertyGroup>
   <ItemGroup>
     <File Include="bin/CabinetAPI.dll">
-      <publishTime>03/05/2018 19:22:41</publishTime>
+      <publishTime>03/12/2018 16:59:07</publishTime>
     </File>
     <File Include="bin/CabinetData.dll">
-      <publishTime>03/05/2018 19:22:41</publishTime>
+      <publishTime>03/12/2018 16:59:07</publishTime>
     </File>
     <File Include="bin/CabinetUtility.dll">
-      <publishTime>03/05/2018 19:22:41</publishTime>
+      <publishTime>03/12/2018 16:50:32</publishTime>
     </File>
     <File Include="bin/Dapper.dll">
       <publishTime>11/25/2017 18:18:42</publishTime>
@@ -24,14 +24,23 @@
     <File Include="bin/DapperExtensions.dll">
       <publishTime>08/08/2017 22:38:30</publishTime>
     </File>
+    <File Include="bin/Microsoft.Web.Infrastructure.dll">
+      <publishTime>07/25/2012 11:48:56</publishTime>
+    </File>
     <File Include="bin/Newtonsoft.Json.dll">
-      <publishTime>08/03/2014 20:33:56</publishTime>
+      <publishTime>02/18/2018 09:44:54</publishTime>
     </File>
     <File Include="bin/NLog.config">
       <publishTime>03/05/2018 10:24:24</publishTime>
     </File>
     <File Include="bin/NLog.dll">
       <publishTime>02/27/2018 23:35:06</publishTime>
+    </File>
+    <File Include="bin/Swagger.Net.dll">
+      <publishTime>09/24/2012 22:44:24</publishTime>
+    </File>
+    <File Include="bin/Swashbuckle.Core.dll">
+      <publishTime>07/08/2017 01:30:56</publishTime>
     </File>
     <File Include="bin/System.Net.Http.Formatting.dll">
       <publishTime>02/01/2018 12:17:18</publishTime>
@@ -42,6 +51,12 @@
     <File Include="bin/System.Web.Http.WebHost.dll">
       <publishTime>02/01/2018 12:19:26</publishTime>
     </File>
+    <File Include="bin/WebActivator.dll">
+      <publishTime>05/31/2012 08:55:16</publishTime>
+    </File>
+    <File Include="bin/WebActivatorEx.dll">
+      <publishTime>02/08/2013 16:42:28</publishTime>
+    </File>
     <File Include="Global.asax">
       <publishTime>02/28/2018 14:19:19</publishTime>
     </File>
@@ -49,10 +64,55 @@
       <publishTime>03/05/2018 10:24:24</publishTime>
     </File>
     <File Include="packages.config">
-      <publishTime>03/05/2018 10:24:24</publishTime>
+      <publishTime>03/09/2018 17:43:11</publishTime>
+    </File>
+    <File Include="SwaggerUI/css/screen.css">
+      <publishTime>03/09/2018 09:00:08</publishTime>
+    </File>
+    <File Include="SwaggerUI/images/pet_store_api.png">
+      <publishTime>03/09/2018 09:00:08</publishTime>
+    </File>
+    <File Include="SwaggerUI/images/wordnik_api.png">
+      <publishTime>03/09/2018 09:00:08</publishTime>
+    </File>
+    <File Include="SwaggerUI/index.html">
+      <publishTime>03/09/2018 17:43:11</publishTime>
+    </File>
+    <File Include="SwaggerUI/lib/.DS_Store">
+      <publishTime>03/09/2018 09:00:08</publishTime>
+    </File>
+    <File Include="SwaggerUI/lib/backbone-min.js">
+      <publishTime>03/09/2018 09:00:08</publishTime>
+    </File>
+    <File Include="SwaggerUI/lib/handlebars.runtime-1.0.0.beta.6.js">
+      <publishTime>03/09/2018 09:00:08</publishTime>
+    </File>
+    <File Include="SwaggerUI/lib/jquery.ba-bbq.min.js">
+      <publishTime>03/09/2018 09:00:08</publishTime>
+    </File>
+    <File Include="SwaggerUI/lib/jquery.min.js">
+      <publishTime>03/09/2018 09:00:08</publishTime>
+    </File>
+    <File Include="SwaggerUI/lib/jquery.slideto.min.js">
+      <publishTime>03/09/2018 09:00:08</publishTime>
+    </File>
+    <File Include="SwaggerUI/lib/jquery.wiggle.min.js">
+      <publishTime>03/09/2018 09:00:08</publishTime>
+    </File>
+    <File Include="SwaggerUI/lib/swagger.js">
+      <publishTime>03/09/2018 09:00:08</publishTime>
+    </File>
+    <File Include="SwaggerUI/lib/underscore-min.js">
+      <publishTime>03/09/2018 09:00:08</publishTime>
+    </File>
+    <File Include="SwaggerUI/swagger-ui.js">
+      <publishTime>03/09/2018 17:43:11</publishTime>
+    </File>
+    <File Include="SwaggerUI/swagger-ui.min.js">
+      <publishTime>03/09/2018 17:43:11</publishTime>
     </File>
     <File Include="Web.config">
-      <publishTime>03/05/2018 19:22:41</publishTime>
+      <publishTime>03/12/2018 16:50:32</publishTime>
     </File>
   </ItemGroup>
 </Project>

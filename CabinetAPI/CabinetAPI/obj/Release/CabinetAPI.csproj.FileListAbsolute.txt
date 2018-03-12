@@ -23,3 +23,10 @@ D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\DapperExtensions.pdb
 D:\github.com\bxg\CabinetAPI\CabinetAPI\obj\Release\CabinetAPI.csprojResolveAssemblyReference.cache
 D:\github.com\bxg\CabinetAPI\CabinetAPI\obj\Release\CabinetAPI.dll
 D:\github.com\bxg\CabinetAPI\CabinetAPI\obj\Release\CabinetAPI.pdb
+D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\Microsoft.Web.Infrastructure.dll
+D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\Swagger.Net.dll
+D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\Swashbuckle.Core.dll
+D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\WebActivator.dll
+D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\WebActivatorEx.dll
+D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\Swagger.Net.pdb
+D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\Swagger.Net.xml

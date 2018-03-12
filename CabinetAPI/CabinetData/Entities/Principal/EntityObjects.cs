@@ -120,10 +120,11 @@ namespace CabinetData.Entities
 		/// </summary>
 		public Int32 CabinetID { get; set; }
 
-		/// <summary>
-		/// 
-		/// </summary>
-		public String OperatorName { get; set; }
+        public int? DepartmentID { get; set; }
+                                           /// <summary>
+                                           /// 
+                                           /// </summary>
+        public String OperatorName { get; set; }
 
 		/// <summary>
 		/// 
