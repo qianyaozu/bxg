@@ -27,6 +27,12 @@ namespace CabinetAPI.Controllers
         {
             try
             {
+                if (search == null)
+                    return BadRequest();
+                if (search.PageIndex == 0)
+                    search.PageIndex = 1;
+                if (search.PageSize == 0)
+                    search.PageSize = 20;
                 var result = SystemLog.GetSystemLogs(search);
                 return Success(result);
             }

@@ -154,6 +154,7 @@ namespace CabinetAPI.Controllers
                 dp.Name = depart.Name;
                 dp.ParentID = depart.ParentID;
                 dp.Remark = depart.Remark;
+                dp.Address = depart.Address;
                 dp.SortID = depart.SortID;
                 Department.Update(dp);
                 return Success(true);
@@ -227,6 +228,12 @@ namespace CabinetAPI.Controllers
         {
             try
             {
+                if (search == null)
+                    return BadRequest();
+                if (search.PageIndex == 0)
+                    search.PageIndex = 1;
+                if (search.PageSize == 0)
+                    search.PageSize = 20;
                 var result = Department.GetDepartment(search);
                 return Success(result);
             }

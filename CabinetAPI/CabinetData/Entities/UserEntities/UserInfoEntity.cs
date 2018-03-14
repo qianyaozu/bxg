@@ -54,11 +54,11 @@ namespace CabinetData.Entities
             {
                 sql += " and Name like '%" + search.UserName + "%'";
             }
-            if (search.DepartmentID != null)
+            if ((search.DepartmentID??0) != 0)
             {
                 sql += " and DepartmentID in (" + string.Join(",", Department.GetChildrenID(new List<int> { search.DepartmentID.Value })) + ")";
             }
-            if (search.RoleID != null)
+            if ((search.RoleID??0) != 0)
             {
                 sql += " and RoleID = " + search.RoleID;
             }

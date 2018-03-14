@@ -63,7 +63,7 @@ namespace CabinetAPI.Controllers
             };
              
             WriteCookie("token", token);
-            CacheHelper.SetCache("token", user, new TimeSpan(48, 0, 0)); 
+            CacheHelper.SetCache(token, user, new TimeSpan(48, 0, 0)); 
             return Success(data);//返回用户权限
         }
 
@@ -286,6 +286,12 @@ namespace CabinetAPI.Controllers
         {
             try
             {
+                if (search == null)
+                    return BadRequest();
+                if (search.PageIndex == 0)
+                    search.PageIndex = 1;
+                if (search.PageSize == 0)
+                    search.PageSize = 20;
                 var result = UserInfo.GetUsers(search);
                 return Success(result);
             }

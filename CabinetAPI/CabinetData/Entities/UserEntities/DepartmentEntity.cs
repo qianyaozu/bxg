@@ -96,7 +96,7 @@ namespace CabinetData.Entities
             {
                 sql += " and Name like '%" + search.DepartmentName + "%'";
             }
-            if (search.ParentID != null)
+            if ((search.ParentID??0) != 0)
             {
                 sql += " and ParentID in " + GetChildrenID(new List<int> { search.ParentID.Value });
             }
