@@ -120,12 +120,14 @@ namespace CabinetAPI.Controllers
                 {
                     return Failure(valiate);
                 }
+                if (depart.Name=="根部门")
+                    return Failure("根部门不能修改");
                 if (depart.ID == 0)
                     return Failure("未指定部门");
                 var dp = Department.GetOne(depart.ID);
                 if (dp == null)
                     return Failure("未找到指定部门");
-
+               
                 var old = Department.GetOne(depart.Name);
                 if (old != null && old.ID != depart.ID)
                     return Failure("该部门名称已经被使用");
@@ -182,6 +184,12 @@ namespace CabinetAPI.Controllers
                 {
                     return Failure("登录失效");
                 }
+
+                var dp = Department.GetOne(departID);
+                if (dp == null)
+                    return Failure("该部门不存在");
+                if (dp.Name == "根部门")
+                    return Failure("根部门不能删除");
                 SystemLog.Add(new SystemLog
                 {
                     Action = "DeleteDepartment",
@@ -194,7 +202,11 @@ namespace CabinetAPI.Controllers
                     UserName = userCookie.Name,
                     RealName = userCookie.RealName
                 });
-
+                //判断下级部门和下级人员
+                if(Department.GetChildren(departID).Count>0)
+                    return Failure("该部门有下级部门，请先处理子部门");
+                if(UserInfo.GetUserByDepartment(departID).Count>0)
+                    return Failure("该部门有下级员工，请先处理这些员工");
                 Department.Delete(departID);
                 return Success(true);
             }

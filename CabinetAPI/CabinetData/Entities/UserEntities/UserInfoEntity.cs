@@ -39,7 +39,14 @@ namespace CabinetData.Entities
                 return cn.Query<UserInfo>(sql, new { Name = name }).ToList();
             }
         }
-
+        public static List<UserInfo> GetUserByDepartment(int departmentID)
+        {
+            var sql = "select * from UserInfo where DepartmentID =@DepartmentID";
+            using (var cn = Database.GetDbConnection())
+            {
+                return cn.Query<UserInfo>(sql, new { DepartmentID = departmentID }).ToList();
+            }
+        }
         public static Page<UserInfo> GetUsers(UserSearchModel search )
         {
             var sql = "select * from UserInfo where 1=1 ";

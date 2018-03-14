@@ -63,6 +63,16 @@ namespace CabinetData.Entities
                 return cn.Execute(sql, new { ID = id })>0;
             }
         }
+
+        public static List<Department> GetChildren(int id)
+        {
+            var sql = "select * from Department where ParentID=@ID ";
+            using (var cn = Database.GetDbConnection())
+            {
+                return cn.Query<Department>(sql, new { ID = id }).ToList();
+            }
+        }
+
         public static void Add(Department department)
         {
             using (var cn = Database.GetDbConnection())
