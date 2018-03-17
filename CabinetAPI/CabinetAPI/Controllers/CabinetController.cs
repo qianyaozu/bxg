@@ -72,7 +72,7 @@ namespace CabinetAPI.Controllers
         /// <summary>
         /// 验证用户实体类
         /// </summary>
-        /// <param name="user"></param>
+        /// <param name="cabinet"></param>
         /// <returns></returns>
         private string ValiateCabinetModel(Cabinet cabinet)
         {
@@ -108,6 +108,11 @@ namespace CabinetAPI.Controllers
                 {
                     return Failure(valiate);
                 }
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Logout();
+                }
                 if (cabinet.ID == 0)
                     return Failure("未指定保险柜");
                 var cab = Cabinet.GetOne(cabinet.ID);
@@ -121,11 +126,7 @@ namespace CabinetAPI.Controllers
                 if (old != null && old.ID != cabinet.ID)
                     return Failure("该硬件编码已经被使用");
 
-                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
-                if (userCookie == null)
-                {
-                    return Logout();
-                }
+               
                 SystemLog.Add(new SystemLog
                 {
                     Action = "EditCabinet",
@@ -163,6 +164,36 @@ namespace CabinetAPI.Controllers
                 logger.Error(ex);
                 return Failure("修改失败");
             }
+        }
+
+        /// <summary>
+        /// 更新保险柜状态
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="status"></param>
+        /// <returns></returns>
+        [HttpPost, Route("api/cabinet/updatestatus")]
+        public IHttpActionResult UpdateCabinetStatus(int id=0,int status=-1)
+        {
+            if (id == 0 || status == -1)
+                return BadRequest();
+            UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+            if (userCookie == null)
+                return Logout();
+            try
+            {
+                var cab = Cabinet.GetOne(id);
+                if (cab == null)
+                    return Failure("该保险柜不存在");
+                cab.Status = status;
+                Cabinet.Update(cab);
+                return Success();
+            }catch(Exception ex)
+            {
+                logger.Error(ex);
+                return Failure("更新失败");
+            }
+
         }
 
         /// <summary>
