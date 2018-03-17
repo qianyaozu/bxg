@@ -29,7 +29,7 @@ namespace CabinetAPI.Controllers
                 UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
                 if (userCookie == null)
                 {
-                    return Failure("登录失效");
+                    return Logout();
                 }
                 List<int> list = Department.GetChildrenID(new List<int> { userCookie.DepartmentID });
                 if (list.Count == 0)
@@ -67,7 +67,7 @@ namespace CabinetAPI.Controllers
                 UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
                 if (userCookie == null)
                 {
-                    return Failure("登录失效");
+                    return Logout();
                 }
                 SystemLog.Add(new SystemLog
                 {
@@ -136,7 +136,7 @@ namespace CabinetAPI.Controllers
                 UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
                 if (userCookie == null)
                 {
-                    return Failure("登录失效");
+                    return Logout();
                 }
                 SystemLog.Add(new SystemLog
                 {
@@ -183,7 +183,7 @@ namespace CabinetAPI.Controllers
                 UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
                 if (userCookie == null)
                 {
-                    return Failure("登录失效");
+                    return Logout();
                 }
 
                 var dp = Department.GetOne(departID);

@@ -78,7 +78,7 @@ namespace CabinetAPI.Controllers
             UserInfo user= CacheHelper.GetCache(GetCookie("token") ) as UserInfo;
             if (user==null)
             {
-                return Failure("登录失效");
+                return Logout();
             }
             SystemLog.Add(new SystemLog
             {
@@ -123,7 +123,7 @@ namespace CabinetAPI.Controllers
                 UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
                 if (userCookie == null)
                 {
-                    return Failure("登录失效");
+                    return Logout();
                 }
                 SystemLog.Add(new SystemLog
                 {
@@ -202,7 +202,7 @@ namespace CabinetAPI.Controllers
                 UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
                 if (userCookie == null)
                 {
-                    return Failure("登录失效");
+                    return Logout();
                 }
                 SystemLog.Add(new SystemLog
                 {
@@ -252,7 +252,7 @@ namespace CabinetAPI.Controllers
                 UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
                 if (userCookie == null)
                 {
-                    return Failure("登录失效");
+                    return Logout();
                 }
                 SystemLog.Add(new SystemLog
                 {

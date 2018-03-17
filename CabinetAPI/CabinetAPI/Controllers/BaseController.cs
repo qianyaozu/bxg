@@ -18,7 +18,7 @@ namespace CabinetAPI.Controllers
         /// 返回成功数据
         /// </summary>
         /// <param name="data"></param>
-        public JsonResult<dynamic> Success(object data)
+        public JsonResult<dynamic> Success(object data=null)
         {
             var result = new
             {
@@ -41,6 +41,16 @@ namespace CabinetAPI.Controllers
                 State = 0,
                 Message = message,
                 Data = data
+            };
+            return Json<dynamic>(result);
+        }
+
+
+        public JsonResult<dynamic> Logout()
+        {
+            var result = new
+            {
+                State = 2,
             };
             return Json<dynamic>(result);
         }

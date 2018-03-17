@@ -1,5 +1,6 @@
 ﻿using CabinetAPI.Filter;
 using CabinetData.Entities;
+using CabinetData.Entities.Principal;
 using CabinetData.Entities.QueryEntities;
 using CabinetUtility;
 using CabinetUtility.Encryption;
@@ -42,7 +43,7 @@ namespace CabinetAPI.Controllers
                 UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
                 if (userCookie == null)
                 {
-                    return Failure("登录失效");
+                    return Logout();
                 }
                 SystemLog.Add(new SystemLog
                 {
@@ -113,7 +114,7 @@ namespace CabinetAPI.Controllers
                 if (cab == null)
                     return Failure("未找到指定保险柜");
                 var old = Cabinet.GetByName(cabinet.Name);
-                if (old != null&& old.ID!=cabinet.ID) 
+                if (old != null && old.ID != cabinet.ID)
                     return Failure("该名称已经被使用");
 
                 old = Cabinet.GetByMac(cabinet.AndroidMac);
@@ -123,7 +124,7 @@ namespace CabinetAPI.Controllers
                 UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
                 if (userCookie == null)
                 {
-                    return Failure("登录失效");
+                    return Logout();
                 }
                 SystemLog.Add(new SystemLog
                 {
@@ -181,7 +182,7 @@ namespace CabinetAPI.Controllers
                 UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
                 if (userCookie == null)
                 {
-                    return Failure("登录失效");
+                    return Logout();
                 }
                 SystemLog.Add(new SystemLog
                 {
@@ -231,5 +232,8 @@ namespace CabinetAPI.Controllers
                 return Failure("查询失败");
             }
         }
+
+
+       
     }
 }

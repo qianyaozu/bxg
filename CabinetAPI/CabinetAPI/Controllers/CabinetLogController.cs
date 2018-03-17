@@ -1,5 +1,6 @@
 ﻿using CabinetAPI.Filter;
 using CabinetData.Entities;
+using CabinetData.Entities.Principal;
 using CabinetData.Entities.QueryEntities;
 using CabinetUtility;
 using NLog;
@@ -60,10 +61,10 @@ namespace CabinetAPI.Controllers
             {
                 var cache = CacheHelper.GetCache(GetCookie("token"));
                 if (cache == null)
-                    return Failure("登录失效");
+                    return Logout();
                 UserInfo userCookie = cache as UserInfo;
                 if (userCookie == null)
-                    return Failure("登录失效");
+                    return Logout();
                 DateTime lastTime = ConvertStringToDateTime(time);
                 var list = new List<CabinetLog>();
                 var departList = Department.GetChildrenID(new List<int>() { userCookie.DepartmentID });
@@ -84,6 +85,76 @@ namespace CabinetAPI.Controllers
             long lTime = long.Parse(timeStamp + "0000");
             TimeSpan toNow = new TimeSpan(lTime);
             return dtStart.Add(toNow);
+        }
+
+
+
+        /// <summary>
+        /// 提交拒绝语音日志
+        /// </summary>
+        /// <param name="log"></param>
+        /// <returns></returns>
+        [HttpPost, Route("api/cabinetlog/rejectaudio")]
+        public IHttpActionResult RejectAudio(CabinetLog log)
+        {
+            if (log == null)
+                return BadRequest();
+            try
+            {
+                var cache = CacheHelper.GetCache(GetCookie("token"));
+                if (cache == null)
+                    return Logout();
+                UserInfo userCookie = cache as UserInfo;
+                if (userCookie == null)
+                    return Logout();
+                log.OperationType = (int)OperatorTypeEnum.拒绝语音;
+                log.OperatorName = userCookie.Name;
+                log.DepartmentID = userCookie.DepartmentID;
+                log.EventContent = "拒绝语音";
+                log.OperateTime = DateTime.Now;
+                log.CreateTime = DateTime.Now;
+                CabinetLog.Add(log);
+                return Success();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+                return Failure("提交失败");
+            }
+        }
+
+        /// <summary>
+        /// 提交接受语音日志
+        /// </summary>
+        /// <param name="log"></param>
+        /// <returns></returns>
+        [HttpPost, Route("api/cabinetlog/acceptaudio")]
+        public IHttpActionResult AcceptAudio(CabinetLog log)
+        {
+            if (log == null)
+                return BadRequest();
+            try
+            {
+                var cache = CacheHelper.GetCache(GetCookie("token"));
+                if (cache == null)
+                    return Logout();
+                UserInfo userCookie = cache as UserInfo;
+                if (userCookie == null)
+                    return Logout();
+                log.OperationType = (int)OperatorTypeEnum.接受语音;
+                log.OperatorName = userCookie.Name;
+                log.DepartmentID = userCookie.DepartmentID;
+                log.EventContent = "接受语音";
+                log.OperateTime = DateTime.Now;
+                log.CreateTime = DateTime.Now;
+                CabinetLog.Add(log);
+                return Success();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+                return Failure("提交失败");
+            }
         }
     }
 }

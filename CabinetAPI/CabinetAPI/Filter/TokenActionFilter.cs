@@ -20,11 +20,11 @@ namespace CabinetAPI.Filter
                     var token =  new Controllers.BaseController().GetCookie("token");
                     if (string.IsNullOrEmpty(token))
                     {
-                        actionContext.Response = actionContext.Request.CreateResponse(HttpStatusCode.OK, new CommonResponse() { State = 0, Message = "登录失效" });
+                        actionContext.Response = actionContext.Request.CreateResponse(HttpStatusCode.OK, new CommonResponse() { State =2 });
                     }
                     else if (CabinetUtility.CacheHelper.GetCache(token)==null) 
                     {
-                        actionContext.Response = actionContext.Request.CreateResponse(HttpStatusCode.OK, new CommonResponse() { State = 0, Message = "登录失效" });
+                        actionContext.Response = actionContext.Request.CreateResponse(HttpStatusCode.OK, new CommonResponse() { State = 2 });
                     }
                 }
                 catch (Exception ex)
