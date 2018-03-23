@@ -67,10 +67,28 @@ namespace CabinetAPI.Controllers
                     return Logout();
                 DateTime lastTime = ConvertStringToDateTime(time);
                 var list = new List<CabinetLog>();
+                List<CommandModel> cmdList = new List<Controllers.CommandModel>();
                 var departList = Department.GetChildrenID(new List<int>() { userCookie.DepartmentID });
                 lock (AndroidController.logLock)
                     list = AndroidController.CabinetLogQueue.ToList().FindAll(m => m.CreateTime >= lastTime && departList.Contains(m.DepartmentID ?? 0));
-                return Success(list);
+
+                if (list.Count == 0)
+                    return Success(cmdList);
+
+                var allDepartList= Department.GetDepartmentByIds(list.Select(m => m.DepartmentID ?? 0).ToList());
+                var allCanbinet = Cabinet.GetCabinetByIds(list.Select(m => m.CabinetID).ToList());
+                list.ForEach(m =>
+                {
+                    CommandModel cmd = new Controllers.CommandModel();
+                    cmd.CabinetName = allCanbinet.Find(n => n.ID == m.CabinetID)?.Name;
+                    cmd.DepartmentName= allDepartList.Find(n => n.ID == m.DepartmentID)?.Name;
+                    cmd.OperateTime = m.OperateTime.Value.ToString("yyyy-MM-dd HH:mm:ss");
+                    cmd.OperatorName = m.OperatorName;
+                    cmd.OperationType = m.OperationType;
+                    cmd.EventContent = m.EventContent;
+                    cmdList.Add(cmd);
+                }); 
+                return Success(cmdList);
             }
             catch (Exception ex)
             {
@@ -156,5 +174,46 @@ namespace CabinetAPI.Controllers
                 return Failure("提交失败");
             }
         }
+    }
+
+    /// <summary>
+    /// 命令信息
+    /// </summary>
+    public class CommandModel
+    {
+        /// <summary>
+        /// 部门名称
+        /// </summary>
+        public string DepartmentName { get; set; }
+        /// <summary>
+        /// 保险柜名称
+        /// </summary>
+        public string CabinetName { get; set; }
+        /// <summary>
+        /// 操作人姓名
+        /// </summary>
+        public string OperatorName { get; set; }
+        /// <summary>
+        /// 发生时间
+        /// </summary>
+        public string OperateTime { get; set; }
+        /// <summary>
+        /// 命令类型
+        /// 正常开门 = 1,
+        /// 密码错误 = 2,
+        /// 正常关门 = 3,
+        /// 非工作时间开门 = 4,
+        /// 非工作时间关门 = 5,
+        /// 外部电源断开 = 6,
+        /// 备份电源电压低 = 7,
+        /// 未按规定关门 = 8,
+        /// 强烈震动 = 9,
+        /// 网络断开 = 10, 15 16
+        /// </summary>
+        public int OperationType { get; set; }
+        /// <summary>
+        /// 事件信息
+        /// </summary>
+        public string EventContent { get; set; }
     }
 }
