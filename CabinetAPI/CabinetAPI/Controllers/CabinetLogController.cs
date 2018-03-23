@@ -208,7 +208,9 @@ namespace CabinetAPI.Controllers
         /// 备份电源电压低 = 7,
         /// 未按规定关门 = 8,
         /// 强烈震动 = 9,
-        /// 网络断开 = 10, 15 16
+        /// 网络断开 = 10
+        /// 请求语音 = 15,
+        /// 结束语音 = 16,
         /// </summary>
         public int OperationType { get; set; }
         /// <summary>

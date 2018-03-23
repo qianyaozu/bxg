@@ -37,7 +37,14 @@ namespace CabinetData.Entities
                return cn.Query<Cabinet>(sql).ToList();
             }
         }
-      
+        public static List<Cabinet> GetCabinetByIds(List<int> ids)
+        {
+            var sql = "select * from Cabinet where ID in @ID";
+            using (var cn = Database.GetDbConnection())
+            {
+                return cn.Query<Cabinet>(sql,new { ID=ids}).ToList();
+            }
+        }
 
         public static Cabinet GetOne(int id)
         {

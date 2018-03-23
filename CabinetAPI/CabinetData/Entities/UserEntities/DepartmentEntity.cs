@@ -22,6 +22,17 @@ namespace CabinetData.Entities
                 return cn.Query<Department>(sql).ToList();
             }
         }
+
+
+        public static List<Department> GetDepartmentByIds(List<int> ids)
+        {
+            var sql = "select * from Department where ID in @ID ";
+            using (var cn = Database.GetDbConnection())
+            {
+                return cn.Query<Department>(sql,new { ID =ids}).ToList();
+            }
+        }
+
         public static List<Department> GetAll(string name)
         {
             var sql = "select * from Department where Name Like '%" + name + "%'";
