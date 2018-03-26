@@ -34,7 +34,23 @@ namespace CabinetAPI.Controllers
                 List<int> list = Department.GetChildrenID(new List<int> { userCookie.DepartmentID });
                 if (list.Count == 0)
                     return Failure("查询错误");
-                return Success(Department.GetAll(list));
+                List<Department> listDepart = Department.GetAll(list);
+                List<DepartmentTree> tree = new List<DepartmentTree>();
+                listDepart.ForEach(m =>
+                {
+                    tree.Add(new DepartmentTree
+                    {
+                        ID = m.ID,
+                        ParentID = m.ParentID,
+                        Name = m.Name,
+                        Label = m.Name,
+                        Address = m.Address,
+                        SortID = m.SortID,
+                        Remark = m.Remark,
+                        CenterIP = m.CenterIP
+                    });
+                });
+                return Success(tree);
             }
             catch (Exception ex)
             {

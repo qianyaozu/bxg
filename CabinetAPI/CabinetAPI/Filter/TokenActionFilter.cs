@@ -17,12 +17,13 @@ namespace CabinetAPI.Filter
             {
                 try
                 {
-                    var token =  new Controllers.BaseController().GetCookie("token");
+                    var token = new Controllers.BaseController().GetCookie("token");
+                
                     if (string.IsNullOrEmpty(token))
                     {
-                        actionContext.Response = actionContext.Request.CreateResponse(HttpStatusCode.OK, new CommonResponse() { State =2 });
+                        actionContext.Response = actionContext.Request.CreateResponse(HttpStatusCode.OK, new CommonResponse() { State = 2 });
                     }
-                    else if (CabinetUtility.CacheHelper.GetCache(token)==null) 
+                    else if (CabinetUtility.CacheHelper.GetCache(token) == null)
                     {
                         actionContext.Response = actionContext.Request.CreateResponse(HttpStatusCode.OK, new CommonResponse() { State = 2 });
                     }

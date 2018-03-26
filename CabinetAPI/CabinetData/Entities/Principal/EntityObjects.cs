@@ -221,6 +221,11 @@ namespace CabinetData.Entities
 
 	}
 
+    public class DepartmentTree: Department
+    {
+        public string Label { get; set; }
+    }
+
 	public partial class Department : BaseModel
 	{
 

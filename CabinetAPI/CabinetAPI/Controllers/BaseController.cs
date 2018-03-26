@@ -68,6 +68,7 @@ namespace CabinetAPI.Controllers
             if (expires != 0)
                 cookie.Expires = DateTime.Now.AddMinutes(expires);
             HttpContext.Current.Response.AppendCookie(cookie);
+            HttpContext.Current.Response.AddHeader(strName, strValue);
         }
 
         public string GetCookie(string strName)
@@ -75,8 +76,8 @@ namespace CabinetAPI.Controllers
             if (HttpContext.Current.Request.Cookies != null && HttpContext.Current.Request.Cookies[strName] != null)
             {
                 return HttpContext.Current.Request.Cookies[strName].Value.ToString();
-            }
-            return "";
+            }      
+            return HttpContext.Current.Request.Headers[strName] ?? "";
         }
         #endregion
 

@@ -54,11 +54,13 @@ namespace CabinetAPI.Controllers
                 UserName = user.Name,
                 RealName = user.RealName
             });
+            Department depart = Department.GetOne(user.DepartmentID);
             var data = new
             {
                 UserID = user.ID,
                 RoleName = user.RoleID == 1 ? "admin" : "user",//1是超管，2是用户
                 RealName = user.RealName,
+                DepartmentName= depart?.Name
                 //RoleModel = Role_Module.Get(user.RoleID),
             };
              
