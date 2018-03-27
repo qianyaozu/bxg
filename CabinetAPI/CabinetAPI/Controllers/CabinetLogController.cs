@@ -16,7 +16,7 @@ namespace CabinetAPI.Controllers
     /// 保险柜日志
     /// </summary>
     [TokenFilter]
-    public class CabinetLogController: BaseController
+    public class CabinetLogController : BaseController
     {
         /// <summary>
         /// 分页查询保险柜日志
@@ -36,7 +36,35 @@ namespace CabinetAPI.Controllers
                 if (search.PageSize == 0)
                     search.PageSize = 20;
                 var result = CabinetLog.GetCabinets(search);
+                if (result.Items.Count > 0)
+                {
+                    var cabinet = Cabinet.GetCabinetByIds(result.Items.Select(m => m.CabinetID).ToList());
+                    var depart = Department.GetAll(result.Items.Select(m => m.DepartmentID ?? 0).ToList());
+                    result.Items.ForEach(m =>
+                    {
+                        m.DepartmentName = depart.Find(n => n.ID == m.DepartmentID)?.Name;
+                        m.CabinetCode = cabinet.Find(n => n.ID == m.CabinetID)?.Code;
+                    });
+                }
                 return Success(result);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+                return Failure("查询失败");
+            }
+        }
+
+
+        [HttpPost, Route("api/cabinetlog/delete")]
+        public IHttpActionResult DeleteCabinetLog(List<int> ids)
+        {
+            try
+            {
+                if (ids?.Count == 0)
+                    return BadRequest();
+                CabinetLog.Delete(ids);
+                return Success();
             }
             catch (Exception ex)
             {
@@ -75,19 +103,21 @@ namespace CabinetAPI.Controllers
                 if (list.Count == 0)
                     return Success(cmdList);
 
-                var allDepartList= Department.GetDepartmentByIds(list.Select(m => m.DepartmentID ?? 0).ToList());
+                var allDepartList = Department.GetDepartmentByIds(list.Select(m => m.DepartmentID ?? 0).ToList());
                 var allCanbinet = Cabinet.GetCabinetByIds(list.Select(m => m.CabinetID).ToList());
                 list.ForEach(m =>
                 {
                     CommandModel cmd = new Controllers.CommandModel();
+                    cmd.CabinetID = m.CabinetID;
+                    cmd.CabinetMac = allCanbinet.Find(n => n.ID == m.CabinetID)?.AndroidMac;
                     cmd.CabinetName = allCanbinet.Find(n => n.ID == m.CabinetID)?.Name;
-                    cmd.DepartmentName= allDepartList.Find(n => n.ID == m.DepartmentID)?.Name;
+                    cmd.DepartmentName = allDepartList.Find(n => n.ID == m.DepartmentID)?.Name;
                     cmd.OperateTime = m.OperateTime.Value.ToString("yyyy-MM-dd HH:mm:ss");
                     cmd.OperatorName = m.OperatorName;
                     cmd.OperationType = m.OperationType;
                     cmd.EventContent = m.EventContent;
                     cmdList.Add(cmd);
-                }); 
+                });
                 return Success(cmdList);
             }
             catch (Exception ex)
@@ -108,14 +138,14 @@ namespace CabinetAPI.Controllers
 
 
         /// <summary>
-        /// 提交拒绝语音日志
+        /// 提交操作日志
         /// </summary>
         /// <param name="log"></param>
         /// <returns></returns>
-        [HttpPost, Route("api/cabinetlog/rejectaudio")]
-        public IHttpActionResult RejectAudio(CabinetLog log)
+        [HttpPost, Route("api/cabinetlog/submit")]
+        public IHttpActionResult SubmitLog(CommandDeal cmd)
         {
-            if (log == null)
+            if (cmd == null)
                 return BadRequest();
             try
             {
@@ -125,12 +155,16 @@ namespace CabinetAPI.Controllers
                 UserInfo userCookie = cache as UserInfo;
                 if (userCookie == null)
                     return Logout();
-                log.OperationType = (int)OperatorTypeEnum.拒绝语音;
+
+                CabinetLog log = new CabinetLog();
+                log.CabinetID = cmd.CabinetID;
+                log.OperationType = cmd.OperationType;
                 log.OperatorName = userCookie.Name;
                 log.DepartmentID = userCookie.DepartmentID;
-                log.EventContent = "拒绝语音";
+                log.EventContent = cmd.EventContent;
                 log.OperateTime = DateTime.Now;
                 log.CreateTime = DateTime.Now;
+                log.Remark = cmd.Remark;
                 CabinetLog.Add(log);
                 return Success();
             }
@@ -142,31 +176,64 @@ namespace CabinetAPI.Controllers
         }
 
         /// <summary>
-        /// 提交接受语音日志
+        /// 获取单位报警统计
         /// </summary>
         /// <param name="log"></param>
         /// <returns></returns>
-        [HttpPost, Route("api/cabinetlog/acceptaudio")]
-        public IHttpActionResult AcceptAudio(CabinetLog log)
+        [HttpPost, Route("api/cabinetlog/departAlarmStatistics")]
+        public IHttpActionResult DepartAlarmStatistics(DepartAlarmStatisticsModel query)
         {
-            if (log == null)
+            if (query == null)
                 return BadRequest();
             try
             {
-                var cache = CacheHelper.GetCache(GetCookie("token"));
-                if (cache == null)
-                    return Logout();
-                UserInfo userCookie = cache as UserInfo;
-                if (userCookie == null)
-                    return Logout();
-                log.OperationType = (int)OperatorTypeEnum.接受语音;
-                log.OperatorName = userCookie.Name;
-                log.DepartmentID = userCookie.DepartmentID;
-                log.EventContent = "接受语音";
-                log.OperateTime = DateTime.Now;
-                log.CreateTime = DateTime.Now;
-                CabinetLog.Add(log);
-                return Success();
+                var result = CabinetLog.DepartAlarmStatistics(query.DepartmentID, query.From  , query.To );
+                return Success(result);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+                return Failure("提交失败");
+            }
+        }
+
+
+        /// <summary>
+        /// 获取每月报警统计
+        /// </summary>
+        /// <param name="log"></param>
+        /// <returns></returns>
+        [HttpPost, Route("api/cabinetlog/departMonthAlarmStatistics")]
+        public IHttpActionResult DepartMonthAlarmStatistics(DepartAlarmStatisticsModel query)
+        {
+            if (query == null)
+                return BadRequest();
+            try
+            {
+                var result = CabinetLog.DepartMonthAlarmStatistics(query.DepartmentID, query.From, query.To);
+                return Success(result);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+                return Failure("提交失败");
+            }
+        }
+
+        /// <summary>
+        /// 报警类型统计
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        [HttpPost, Route("api/cabinetlog/departAlarmTypeStatistics")]
+        public IHttpActionResult DepartAlarmTypeStatistics(DepartAlarmStatisticsModel query)
+        {
+            if (query == null)
+                return BadRequest();
+            try
+            {
+                var result = CabinetLog.DepartAlarmTypeStatistics(query.DepartmentID, query.From, query.To);
+                return Success(result);
             }
             catch (Exception ex)
             {
@@ -176,11 +243,41 @@ namespace CabinetAPI.Controllers
         }
     }
 
+
+    public class DepartAlarmStatisticsModel
+    {
+        public string From { get; set; }
+
+        public string To { get; set; }
+        public int DepartmentID { get; set; }
+    }
+
+
+    public class CommandDeal
+    {
+        public int CabinetID { get; set; }
+        
+        public int OperationType { get; set; } 
+        /// <summary>
+        /// 处理意见
+        /// </summary>
+        public string EventContent { get; set; }
+
+        public string Remark { get; set; } 
+
+    }
+
+
     /// <summary>
     /// 命令信息
     /// </summary>
     public class CommandModel
     {
+        public int CabinetID { get; set; }
+        /// <summary>
+        /// mac地址,语音房间号 =mac
+        /// </summary>
+        public String CabinetMac { get; set; }
         /// <summary>
         /// 部门名称
         /// </summary>

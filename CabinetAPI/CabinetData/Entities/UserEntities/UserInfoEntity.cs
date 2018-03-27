@@ -47,7 +47,7 @@ namespace CabinetData.Entities
                 return cn.Query<UserInfo>(sql, new { DepartmentID = departmentID }).ToList();
             }
         }
-        public static Page<UserInfo> GetUsers(UserSearchModel search )
+        public static Page<UserInfoA> GetUsers(UserSearchModel search )
         {
             var sql = "select * from UserInfo where 1=1 ";
             if (!string.IsNullOrEmpty(search.UserName))
@@ -64,7 +64,7 @@ namespace CabinetData.Entities
             }
             using (var cn = Database.GetDbConnection())
             {
-                return cn.PagedQuery<UserInfo>(search.PageIndex, search.PageSize, sql, new { });
+                return cn.PagedQuery<UserInfoA>(search.PageIndex, search.PageSize, sql, new { });
             }
         }
 
@@ -94,5 +94,6 @@ namespace CabinetData.Entities
                 return cn.Execute(sql, new { ID = id }) > 0;
             }
         }
+
     }
 }

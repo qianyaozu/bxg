@@ -31,32 +31,54 @@ namespace CabinetAPI.Controllers
                 {
                     return Logout();
                 }
-                List<int> list = Department.GetChildrenID(new List<int> { userCookie.DepartmentID });
-                if (list.Count == 0)
-                    return Failure("查询错误");
-                List<Department> listDepart = Department.GetAll(list);
-                List<DepartmentTree> tree = new List<DepartmentTree>();
-                listDepart.ForEach(m =>
-                {
-                    tree.Add(new DepartmentTree
-                    {
-                        ID = m.ID,
-                        ParentID = m.ParentID,
-                        Name = m.Name,
-                        Label = m.Name,
-                        Address = m.Address,
-                        SortID = m.SortID,
-                        Remark = m.Remark,
-                        CenterIP = m.CenterIP
-                    });
-                });
-                return Success(tree);
+                List<Department> departList = Department.GetAll();
+                Department root = departList.Find(m => m.ID == userCookie.DepartmentID);
+              
+                //List<int> list = Department.GetChildrenID(new List<int> { userCookie.DepartmentID });
+                //if (list.Count == 0)
+                //    return Failure("查询错误");
+                //List<Department> listDepart = Department.GetAll(list);
+                //DepartmentTree tree = new DepartmentTree();
+                //tree.label = listDepart.Find(m => m.ID == userCookie.DepartmentID).Name;
+                //tree.children=
+
+                //List<DepartmentTree> tree = new List<DepartmentTree>();
+                //listDepart.ForEach(m =>
+                //{
+                //    tree.Add(new DepartmentTree
+                //    {
+                //        ID = m.ID,
+                //        ParentID = m.ParentID,
+                //        Name = m.Name,
+                //        label = m.Name,
+                //        Address = m.Address,
+                //        SortID = m.SortID,
+                //        Remark = m.Remark,
+                //        CenterIP = m.CenterIP
+                //    });
+                //});
+                return Success(FindTree(root, departList));
             }
             catch (Exception ex)
             {
                 logger.Error(ex);
                 return Failure("查询错误");
             }
+        }
+
+
+        private DepartmentTree FindTree(Department root, List<Department> departList)
+        {
+            DepartmentTree tree = new DepartmentTree();
+            tree.ID = root.ID;
+            tree.ParentName = departList.Find(m => m.ID == root.ParentID)?.Name;
+            tree.label = root.Name;
+            tree.children = new List<DepartmentTree>();
+            departList.FindAll(m => m.ParentID == root.ID).ForEach(m =>
+                {
+                    tree.children.Add(FindTree(m, departList));
+                });
+            return tree;
         }
 
         /// <summary>
@@ -251,6 +273,14 @@ namespace CabinetAPI.Controllers
                 if (search.PageSize == 0)
                     search.PageSize = 20;
                 var result = Department.GetDepartment(search);
+                if (result.Items.Count > 0)
+                {
+                    var list = Department.GetAll(result.Items.ToList().Select(m => m.ID).ToList());
+                    result.Items.ForEach(item =>
+                    {
+                        item.ParentName = list.Find(m => m.ID == item.ParentID)?.Name;
+                    });
+                }
                 return Success(result);
             }
             catch (Exception ex)

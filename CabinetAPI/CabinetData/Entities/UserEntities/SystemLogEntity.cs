@@ -22,11 +22,11 @@ namespace CabinetData.Entities
 
             if (!string.IsNullOrEmpty(search.StartTime))
             {
-                sql += " and CreateTime >= '" + search.StartTime + "";
+                sql += " and CreateTime >= '" + search.StartTime + "'";
             }
             if (!string.IsNullOrEmpty(search.EndTime))
             {
-                sql += " and CreateTime <= '" + search.EndTime + "";
+                sql += " and CreateTime <= '" + search.EndTime + "'";
             }
             using (var cn = Database.GetDbConnection())
             {

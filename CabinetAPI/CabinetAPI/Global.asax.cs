@@ -54,6 +54,7 @@ namespace CabinetAPI
                                 logs.Add(new CabinetData.Entities.CabinetLog
                                 {
                                     CabinetID = cabinet.ID,
+                                    DepartmentID=cabinet.DepartmentID,
                                     OperatorName = "",
                                     OperateTime = DateTime.Now,
                                     OperationType = (int)OperatorTypeEnum.上线,
@@ -70,6 +71,7 @@ namespace CabinetAPI
                             logs.Add(new CabinetData.Entities.CabinetLog
                             {
                                 CabinetID = cabinet.ID,
+                                DepartmentID = cabinet.DepartmentID,
                                 OperatorName = "",
                                 OperateTime = DateTime.Now,
                                 OperationType = (int)OperatorTypeEnum.下线,
@@ -77,6 +79,8 @@ namespace CabinetAPI
                                 CabinetIP = "",
                                 EventContent = "超时下线"
                             });
+                            DateTime dt;
+                            AndroidController.HeartDictionary.TryRemove(cabinet.ID, out dt);
                         }
                     }
                     if (onLine.Count > 0)

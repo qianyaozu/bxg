@@ -1,10 +1,15 @@
 using CabinetData.Base;
-using System; 
+using System;
+using System.Collections.Generic;
 
 namespace CabinetData.Entities
 {
+    public partial class CabinetA : Cabinet
+    {
+        public string DepartmentName { get; set; }
 
-	public partial class Cabinet : BaseModel
+    }
+    public partial class Cabinet : BaseModel
 	{
 
 		/// <summary>
@@ -106,8 +111,13 @@ namespace CabinetData.Entities
          
 
     }
+    public class CabinetLogA: CabinetLog
+    {
+        public string CabinetCode { get; set; }
+        public string DepartmentName { get; set; }
+    }
 
-	public partial class CabinetLog : BaseModel
+    public partial class CabinetLog : BaseModel
 	{
 
 		/// <summary>
@@ -221,12 +231,52 @@ namespace CabinetData.Entities
 
 	}
 
-    public class DepartmentTree: Department
+    public class DepartmentTree
     {
-        public string Label { get; set; }
-    }
+        public int ID { get; set; }
+        public string label { get; set; }
 
-	public partial class Department : BaseModel
+        public string ParentName { get; set; }
+        public List<DepartmentTree> children { get; set; }
+    }
+    public partial class DepartmentA : Department
+    {
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Int32 ID { get; set; }
+        public string ParentName { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public Int32? ParentID { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public String Name { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Int32? SortID { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public String Address { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public String Remark { get; set; }
+
+
+        public string CenterIP { get; set; }
+
+    }
+    public partial class Department : BaseModel
 	{
 
 		/// <summary>
@@ -263,8 +313,11 @@ namespace CabinetData.Entities
         public string CenterIP { get; set; }
 
     }
-
-	public partial class UserInfo : BaseModel
+    public class UserInfoA : UserInfo
+    {
+        public string DepartmentName { get; set; }
+    }
+    public partial class UserInfo : BaseModel
 	{
 
 		/// <summary>

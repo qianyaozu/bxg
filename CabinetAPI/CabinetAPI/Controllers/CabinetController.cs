@@ -255,6 +255,37 @@ namespace CabinetAPI.Controllers
                 if (search.PageSize == 0)
                     search.PageSize = 20;
                 var result = Cabinet.GetCabinets(search);
+                if (result.Items.Count > 0)
+                {
+                    var depart = Department.GetAll(result.Items.Select(m => m.DepartmentID).ToList());
+                    result.Items.ForEach(m =>
+                    {
+                        m.DepartmentName = depart.Find(n => n.ID == m.DepartmentID)?.Name;
+                    });
+                }
+                return Success(result);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+                return Failure("查询失败");
+            }
+        }
+        [HttpPost, Route("api/cabinet/viewbydepart")]
+        public IHttpActionResult QueryCabinetByDepartment(int departID)
+        {
+            try
+            {
+               
+                var result = Cabinet.GetCabinetsByDepart(departID);
+                if (result.Count > 0)
+                {
+                    var depart = Department.GetAll(result.Select(m => m.DepartmentID).ToList());
+                    result.ForEach(m =>
+                    {
+                        m.DepartmentName = depart.Find(n => n.ID == m.DepartmentID)?.Name;
+                    });
+                }
                 return Success(result);
             }
             catch (Exception ex)
@@ -265,6 +296,5 @@ namespace CabinetAPI.Controllers
         }
 
 
-       
     }
 }

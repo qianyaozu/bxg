@@ -79,7 +79,19 @@ namespace CabinetData.Entities
             }
         }
 
-        public static Page<Cabinet> GetCabinets(CabinetSearchModel search)
+        public static List<CabinetA> GetCabinetsByDepart(int departID)
+        {
+            var departList = Department.GetChildren(departID);
+            if (departList.Count == 0)
+                return new List<CabinetA>();
+            var sql = "select * from Cabinet where DepartmentID in @ID ";
+            using (var cn = Database.GetDbConnection())
+            {
+                return cn.Query<CabinetA>(sql, new { ID = departList.Select(m => m.ID).ToList() }).ToList();
+            }
+        }
+
+        public static Page<CabinetA> GetCabinets(CabinetSearchModel search)
         {
             var sql = "select * from Cabinet where 1=1 ";
             if (!string.IsNullOrEmpty(search.CabinetName))
@@ -104,7 +116,7 @@ namespace CabinetData.Entities
             }
             using (var cn = Database.GetDbConnection())
             {
-                return cn.PagedQuery<Cabinet>(search.PageIndex, search.PageSize, sql, new { });
+                return cn.PagedQuery<CabinetA>(search.PageIndex, search.PageSize, sql, new { });
             }
         }
 

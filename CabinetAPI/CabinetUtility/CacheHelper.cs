@@ -20,7 +20,7 @@ namespace CabinetUtility
         public static object GetCache(string CacheKey)
         {
             System.Web.Caching.Cache objCache = HttpRuntime.Cache;
-            return objCache[CacheKey];
+            return objCache.Get(CacheKey); 
         }
 
         /// <summary>  

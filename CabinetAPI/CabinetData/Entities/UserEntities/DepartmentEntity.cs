@@ -29,7 +29,7 @@ namespace CabinetData.Entities
             var sql = "select * from Department where ID in @ID ";
             using (var cn = Database.GetDbConnection())
             {
-                return cn.Query<Department>(sql,new { ID =ids}).ToList();
+                return cn.Query<Department>(sql, new { ID = ids }).ToList();
             }
         }
 
@@ -71,7 +71,7 @@ namespace CabinetData.Entities
             var sql = "delete from Department where ID=@ID ";
             using (var cn = Database.GetDbConnection())
             {
-                return cn.Execute(sql, new { ID = id })>0;
+                return cn.Execute(sql, new { ID = id }) > 0;
             }
         }
 
@@ -95,11 +95,11 @@ namespace CabinetData.Entities
         {
             using (var cn = Database.GetDbConnection())
             {
-               return cn.Update<Department>(department);
+                return cn.Update<Department>(department);
             }
         }
 
-        public static Page<Department> GetDepartment(DepartmentSearchModel search)
+        public static Page<DepartmentA> GetDepartment(DepartmentSearchModel search)
         {
 
             var sql = "select * from Department where 1=1 ";
@@ -107,14 +107,16 @@ namespace CabinetData.Entities
             {
                 sql += " and Name like '%" + search.DepartmentName + "%'";
             }
-            if ((search.ParentID??0) != 0)
+            List<int> IDList = new List<int>();
+            if ((search.ParentID ?? 0) != 0)
             {
-                sql += " and ParentID in " + GetChildrenID(new List<int> { search.ParentID.Value });
+                IDList = GetChildrenID(new List<int> { search.ParentID.Value });
+                sql += " and ParentID in @IDs";
             }
 
             using (var cn = Database.GetDbConnection())
             {
-                return cn.PagedQuery<Department>(search.PageIndex, search.PageSize, sql, new { });
+                return cn.PagedQuery<DepartmentA>(search.PageIndex, search.PageSize, sql, new { IDs = IDList });
             }
         }
 
@@ -125,20 +127,19 @@ namespace CabinetData.Entities
         /// <returns></returns>
         public static List<int> GetChildrenID(List<int> parentid)
         {
+            List<int> resultList = new List<int>();
+            resultList.AddRange(parentid);
             using (var cn = Database.GetDbConnection())
             {
                 var sql = "select id from Department where ParentID in @ParentID";
                 List<int> idList = cn.Query<int>(sql, new { ParentID = parentid }).ToList();
                 if (idList.Count > 0)
                 {
-                    return GetChildrenID(idList);
+                    resultList.AddRange(GetChildrenID(idList));
+                    return resultList;
                 }
-                else
-                {
-                    idList.AddRange(parentid);
-                }
-                return idList;
             }
+            return resultList.Distinct().ToList();
         }
     }
 }

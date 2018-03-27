@@ -235,6 +235,50 @@ namespace CabinetAPI.Controllers
                 return Failure("修改失败");
             }
         }
+        [HttpPost, Route("api/user/updatestatus")]
+        public IHttpActionResult UpdateUserStatus(int ID)
+        {
+
+            try
+            {
+                var user = UserInfo.GetOne(ID);
+                if (user == null)
+                    return Failure("未找到该用户");
+                if (user.Status == 0)
+                    user.Status = 1;
+                else
+                    user.Status = 0;
+                UserInfo.Update(user);
+                return Success();
+
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+                return Failure("执行异常");
+            }
+        }
+        [HttpPost, Route("api/user/resetpassword")]
+        public IHttpActionResult ResetPassword(int id)
+        {
+            
+            try
+            {
+                var user = UserInfo.GetOne(id);
+                if (user == null)
+                    return Failure("未找到该用户");
+                user.Password = AESAlgorithm.Encrypto("123456");
+                UserInfo.Update(user);
+                return Success();
+
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+                return Failure("执行异常");
+            }
+        }
+
 
         /// <summary>
         /// 删除用户
@@ -295,6 +339,14 @@ namespace CabinetAPI.Controllers
                 if (search.PageSize == 0)
                     search.PageSize = 20;
                 var result = UserInfo.GetUsers(search);
+                if (result.Items.Count > 0)
+                {
+                    var depart = Department.GetAll(result.Items.Select(m => m.DepartmentID).ToList());
+                    result.Items.ForEach(m =>
+                    {
+                        m.DepartmentName = depart.Find(n => n.ID == m.DepartmentID)?.Name;
+                    });
+                }
                 return Success(result);
             }
             catch (Exception ex)
@@ -304,4 +356,6 @@ namespace CabinetAPI.Controllers
             }
         }
     }
+
+    
 }
