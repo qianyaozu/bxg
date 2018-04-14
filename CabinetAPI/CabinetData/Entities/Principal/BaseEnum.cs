@@ -11,6 +11,7 @@ namespace CabinetData.Entities.Principal
     /// </summary>
     public enum OperatorTypeEnum
     {
+        请求开门 = 0,
         正常开门 = 1,
         密码错误 = 2,
         正常关门 = 3,
@@ -28,8 +29,10 @@ namespace CabinetData.Entities.Principal
         请求语音 = 15,
         结束语音 = 16,
         心跳 = 17,
-        接受语音=18,
-        拒绝语音=19
+        接受语音 = 18,
+        拒绝语音 = 19,
+        允许开门 = 20,
+        拒绝开门 = 21
     }
 
     /// <summary>
@@ -38,7 +41,9 @@ namespace CabinetData.Entities.Principal
     public enum RoleEnum
     {
         超级管理员 = 1,
-        管理员 = 2,
+        系统管理员 = 2,
+        安全管理员 = 3,
+        安全审计员 = 4
     }
 
     public enum ModuleEnum

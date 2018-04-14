@@ -79,44 +79,31 @@ namespace CabinetData.Entities
             }
         }
 
-        public static List<CabinetA> GetCabinetsByDepart(int departID)
+        public static List<CabinetA> GetCabinetsByDepart(List<int> departID)
         {
-            var departList = Department.GetChildren(departID);
-            if (departList.Count == 0)
-                return new List<CabinetA>();
+         
             var sql = "select * from Cabinet where DepartmentID in @ID ";
             using (var cn = Database.GetDbConnection())
             {
-                return cn.Query<CabinetA>(sql, new { ID = departList.Select(m => m.ID).ToList() }).ToList();
+                return cn.Query<CabinetA>(sql, new { ID = departID }).ToList();
             }
         }
 
-        public static Page<CabinetA> GetCabinets(CabinetSearchModel search)
+        public static Page<CabinetA> GetCabinets(CabinetSearchModel search,List<int> departList)
         {
-            var sql = "select * from Cabinet where 1=1 ";
+            var sql = "select * from Cabinet where DepartmentID in @DepartmentID ";
             if (!string.IsNullOrEmpty(search.CabinetName))
             {
                 sql += " and Name like '%" + search.CabinetName + "%'";
             }
-            if (!string.IsNullOrEmpty(search.DepartmentName))
-            {
-                List<Department> departList = Department.GetAll(search.DepartmentName);
-                if (departList.Count == 0)
-                {
-                    sql += " and DepartmentID in (0)";
-                }
-                else
-                {
-                    sql += " and DepartmentID in (" + string.Join(",", departList.Select(m => m.ID).ToList()) + ")";
-                }
-            }
+            
             if (search.CabinetCode != null)
             {
                 sql += " and Code like '%" + search.CabinetCode + "%'";
             }
             using (var cn = Database.GetDbConnection())
             {
-                return cn.PagedQuery<CabinetA>(search.PageIndex, search.PageSize, sql, new { });
+                return cn.PagedQuery<CabinetA>(search.PageIndex, search.PageSize, sql, new { DepartmentID = departList });
             }
         }
 

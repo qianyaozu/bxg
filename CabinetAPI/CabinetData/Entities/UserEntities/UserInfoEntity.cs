@@ -47,16 +47,16 @@ namespace CabinetData.Entities
                 return cn.Query<UserInfo>(sql, new { DepartmentID = departmentID }).ToList();
             }
         }
-        public static Page<UserInfoA> GetUsers(UserSearchModel search )
+        public static Page<UserInfoA> GetUsers(UserSearchModel search,List<int> departList )
         {
-            var sql = "select * from UserInfo where 1=1 ";
+            var sql = "select * from UserInfo where DepartmentID in @DepartmentID ";
             if (!string.IsNullOrEmpty(search.UserName))
             {
                 sql += " and Name like '%" + search.UserName + "%'";
             }
             if ((search.DepartmentID??0) != 0)
             {
-                sql += " and DepartmentID in (" + string.Join(",", Department.GetChildrenID(new List<int> { search.DepartmentID.Value })) + ")";
+                sql += " and DepartmentID in (" + string.Join(",", Department.GetAllChildren(search.DepartmentID.Value).Select(m => m.ID).ToList()) + ")";
             }
             if ((search.RoleID??0) != 0)
             {
@@ -64,7 +64,7 @@ namespace CabinetData.Entities
             }
             using (var cn = Database.GetDbConnection())
             {
-                return cn.PagedQuery<UserInfoA>(search.PageIndex, search.PageSize, sql, new { });
+                return cn.PagedQuery<UserInfoA>(search.PageIndex, search.PageSize, sql, new { DepartmentID = departList });
             }
         }
 

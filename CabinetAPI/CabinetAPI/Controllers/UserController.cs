@@ -9,18 +9,34 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Http;
 
 namespace CabinetAPI.Controllers
 {
+    //    监管平台新增功能需求
+    //1、增加角色，三元，包括系统管理员，安全管理员，安全审计员，将页面的功能划分给这三个角色，要求有相互监督，相互监管功能  x
+    //2、所有的数据传输增加一个通讯加密
+    //3、日志清理保存需要有一个安全保障
+    //4、网页登录的用户名密码必须是字母+数字 （大于8位）   x
+    //5、密码5次输入错误，不再给予尝试，并冻结             x
+    //6、页面时效性，页面停留多久就需要重新登录            x 2小时缓存
+    //7、用户密码时效性7天，加入在7天之后必须提示客户修改密码，可以用老密码登录进去修改成新密码  x
+    //8、页面刷新报警要和保密柜状态一直，状态迁移到离线，声音必须马上报警。
+
     /// <summary>
     /// 用户信息接口
     /// </summary>
     [TokenFilter]
     public class UserController : BaseController
     {
-         
+        /// <summary>
+        /// 连续密码错误
+        /// </summary>
+        private static List<LoginModel> ContinueErrorPassword = new List<LoginModel>();
+      
+
         /// <summary>
         /// 登录
         /// </summary>
@@ -33,40 +49,72 @@ namespace CabinetAPI.Controllers
                 return Failure("用户名不存在");
             if (string.IsNullOrEmpty(model.UserName) || string.IsNullOrEmpty(model.Password))
                 return Failure("用户名或密码不得为空");
-            UserInfo user = UserInfo.GetOne(model.UserName);
-            if (user == null)
-                return Failure("用户名不存在");
-            if (user.Password != AESAlgorithm.Encrypto(model.Password))
-                return Failure("密码错误");
-            var token = Guid.NewGuid().ToString();
-           
+            try
+            {
+                lock (ContinueErrorPassword)
+                {
+                    //校验5次密码错误
+                    ContinueErrorPassword.RemoveAll(m => m.CreateTime.Day != DateTime.Now.Day);
+                    if (ContinueErrorPassword.Count(m => m.UserName == model.UserName) > 5)
+                    {
+                        UserInfo u = UserInfo.GetOne(model.UserName);
+                        if (u != null)
+                        {
+                            u.Status = 0;
+                            UserInfo.Update(u);
+                        }
+                        return Failure("连续输错5次密码并冻结");
+                    }
+                }
+                UserInfo user = UserInfo.GetOne(model.UserName);
+                if (user == null)
+                    return Failure("用户名不存在");
+                if (user.Status == 0)
+                    return Failure("此用户已禁用，请联系管理员");
+                if (user.Password != AESAlgorithm.Encrypto(model.Password))
+                {
+                    model.CreateTime = DateTime.Now;
+                    lock (ContinueErrorPassword)
+                    {
+                        ContinueErrorPassword.Add(model);
+                    }
+                    return Failure("密码错误");
+                }
+                var token = Guid.NewGuid().ToString();
 
+
+
+                SystemLog.Add(new SystemLog
+                {
+                    Action = "Login",
+                    LogContent = user.Name + "-登录成功",
+                    CreateTime = DateTime.Now,
+                    UserID = user.ID,
+                    RoleID = user.RoleID,
+                    DepartmentID = user.DepartmentID,
+                    ClientIP = GetIP(),
+                    UserName = user.Name,
+                    RealName = user.RealName
+                });
+                Department depart = Department.GetOne(user.DepartmentID);
+                var data = new
+                {
+                    UserID = user.ID,
+                    RoleName = user.RoleID == 1 ? "admin" : "user",//1是超管，2是用户
+                    RealName = user.RealName,
+                    DepartmentName = depart?.Name,
+                    NeedChangePassword = (user.LastPasswordTime.Value.AddDays(7) < DateTime.Now ? true : false),//是否需要提示修改密码
+                    RoleModel = Role_Module.Get(user.RoleID),//返回所有模块
+                };
+
+                WriteCookie("token", token);
+                CacheHelper.SetCache(token, user, new TimeSpan(2, 0, 0)); //2小时缓存
+                return Success(data);//返回用户权限
+            }catch(Exception e)
+            {
+                return Failure(e.Message);
+            }
             
-            SystemLog.Add(new SystemLog
-            {
-                Action = "Login",
-                LogContent = user.Name + "-登录成功",
-                CreateTime = DateTime.Now,
-                UserID = user.ID,
-                RoleID = user.RoleID,
-                DepartmentID = user.DepartmentID,
-                ClientIP = GetIP(),
-                UserName = user.Name,
-                RealName = user.RealName
-            });
-            Department depart = Department.GetOne(user.DepartmentID);
-            var data = new
-            {
-                UserID = user.ID,
-                RoleName = user.RoleID == 1 ? "admin" : "user",//1是超管，2是用户
-                RealName = user.RealName,
-                DepartmentName= depart?.Name
-                //RoleModel = Role_Module.Get(user.RoleID),
-            };
-             
-            WriteCookie("token", token);
-            CacheHelper.SetCache(token, user, new TimeSpan(48, 0, 0)); 
-            return Success(data);//返回用户权限
         }
 
         /// <summary>
@@ -120,7 +168,18 @@ namespace CabinetAPI.Controllers
                 {
                     return Failure("该用户名已经存在");
                 }
-
+                if (string.IsNullOrEmpty(user.Password))
+                {
+                    return Failure("密码不为空");
+                }
+                if (user.Password?.Length <= 8)
+                {
+                    return Failure("密码必须是大于8位");
+                }
+                if (!Regex.IsMatch(user.Password[0].ToString(), @"^[A-Za-z]"))
+                {
+                    return Failure("密码必须字母开头");
+                }
 
                 UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
                 if (userCookie == null)
@@ -141,7 +200,9 @@ namespace CabinetAPI.Controllers
                 });
 
                 user.CreateTime = DateTime.Now;
-                user.RoleID = (int)RoleEnum.管理员;
+                user.RoleID = user.RoleID;
+                user.Password = AESAlgorithm.Encrypto(user.Password);
+                user.LastPasswordTime = DateTime.Now;
                 UserInfo.Add(user);
                 return Success(true);
             }
@@ -200,6 +261,18 @@ namespace CabinetAPI.Controllers
                 {
                     return Failure("该用户名已经被使用");
                 }
+                if (string.IsNullOrEmpty(user.Password))
+                {
+                    return Failure("密码不为空");
+                }
+                if (user.Password?.Length <= 8)
+                {
+                    return Failure("密码必须是大于8位");
+                }
+                if (!Regex.IsMatch(user.Password[0].ToString(), @"^[A-Za-z]"))
+                {
+                    return Failure("密码必须字母开头");
+                }
 
                 UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
                 if (userCookie == null)
@@ -220,6 +293,10 @@ namespace CabinetAPI.Controllers
                 });
 
                 us.Name = user.Name;
+                if(us.Password!= AESAlgorithm.Encrypto(user.Password))
+                {
+                    us.LastPasswordTime = DateTime.Now;
+                }
                 us.Password = AESAlgorithm.Encrypto(user.Password);
                 us.DepartmentID = user.DepartmentID;
                 us.RealName = user.RealName;
@@ -235,6 +312,57 @@ namespace CabinetAPI.Controllers
                 return Failure("修改失败");
             }
         }
+
+        /// <summary>
+        /// 修改自己密码
+        /// </summary>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        [HttpPost, Route("api/user/changepassword")]
+        public IHttpActionResult ChangePassword(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+            {
+                return Failure("密码不为空");
+            }
+            if (password?.Length <= 8)
+            {
+                return Failure("密码必须是大于8位");
+            }
+            if (!Regex.IsMatch(password[0].ToString(), @"^[A-Za-z]"))
+            {
+                return Failure("密码必须字母开头");
+            }
+            try
+            {
+                UserInfo user = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (user == null)
+                {
+                    return Logout();
+                }
+                var us = UserInfo.GetOne(user.ID);
+                us.Password = AESAlgorithm.Encrypto(password);
+                UserInfo.Update(us);
+                SystemLog.Add(new SystemLog
+                {
+                    Action = "Logout",
+                    LogContent = user.Name + "-更新密码",
+                    CreateTime = DateTime.Now,
+                    UserID = user.ID,
+                    RoleID = user.RoleID,
+                    DepartmentID = user.DepartmentID,
+                    ClientIP = GetIP(),
+                    UserName = user.Name,
+                    RealName = user.RealName
+                });
+                return Success();
+            }catch(Exception ex)
+            {
+                logger.Error(ex);
+                return Failure("修改失败");
+            }
+        }
+
         [HttpPost, Route("api/user/updatestatus")]
         public IHttpActionResult UpdateUserStatus(int ID)
         {
@@ -269,6 +397,18 @@ namespace CabinetAPI.Controllers
                     return Failure("未找到该用户");
                 user.Password = AESAlgorithm.Encrypto("123456");
                 UserInfo.Update(user);
+                SystemLog.Add(new SystemLog
+                {
+                    Action = "Logout",
+                    LogContent = user.Name + "-重置密码",
+                    CreateTime = DateTime.Now,
+                    UserID = user.ID,
+                    RoleID = user.RoleID,
+                    DepartmentID = user.DepartmentID,
+                    ClientIP = GetIP(),
+                    UserName = user.Name,
+                    RealName = user.RealName
+                });
                 return Success();
 
             }
@@ -338,7 +478,13 @@ namespace CabinetAPI.Controllers
                     search.PageIndex = 1;
                 if (search.PageSize == 0)
                     search.PageSize = 20;
-                var result = UserInfo.GetUsers(search);
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Logout();
+                }
+                List<Department> departList = Department.GetAllChildren(userCookie.DepartmentID);
+                var result = UserInfo.GetUsers(search, departList.Select(m=>m.ID).ToList());
                 if (result.Items.Count > 0)
                 {
                     var depart = Department.GetAll(result.Items.Select(m => m.DepartmentID).ToList());

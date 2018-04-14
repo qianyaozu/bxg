@@ -59,6 +59,10 @@ namespace CabinetAPI.Controllers
                 });
                 cabinet.CreateTime = DateTime.Now;
                 cabinet.IsOnline = false;
+                if(!string.IsNullOrEmpty(cabinet.FirstContactPassword))
+                    cabinet.FirstContactPassword= AESAlgorithm.Encrypto(cabinet.FirstContactPassword);
+                if (!string.IsNullOrEmpty(cabinet.SecondContactPassword))
+                    cabinet.SecondContactPassword = AESAlgorithm.Encrypto(cabinet.SecondContactPassword);
                 Cabinet.Add(cabinet);
                 return Success(true);
             }
@@ -248,13 +252,22 @@ namespace CabinetAPI.Controllers
         {
             try
             {
+                
                 if (search == null)
                     return BadRequest();
                 if (search.PageIndex == 0)
                     search.PageIndex = 1;
                 if (search.PageSize == 0)
                     search.PageSize = 20;
-                var result = Cabinet.GetCabinets(search);
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Logout();
+                }
+                List<Department> departList = Department.GetAllChildren(userCookie.DepartmentID);
+                if (!string.IsNullOrEmpty(search.DepartmentName))
+                    departList = departList.FindAll(m => m.Name.Contains(search.DepartmentName));
+                var result = Cabinet.GetCabinets(search, departList.Select(m=>m.ID).ToList());
                 if (result.Items.Count > 0)
                 {
                     var depart = Department.GetAll(result.Items.Select(m => m.DepartmentID).ToList());
@@ -271,13 +284,25 @@ namespace CabinetAPI.Controllers
                 return Failure("查询失败");
             }
         }
+
+        /// <summary>
+        /// 根据部门获取保险柜
+        /// </summary>
+        /// <param name="departID"></param>
+        /// <returns></returns>
         [HttpPost, Route("api/cabinet/viewbydepart")]
         public IHttpActionResult QueryCabinetByDepartment(int departID)
         {
             try
             {
-               
-                var result = Cabinet.GetCabinetsByDepart(departID);
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Logout();
+                }
+                List<int> departList = Department.GetAllChildren(userCookie.DepartmentID).Select(m=>m.ID).ToList();//我的权限所能看到的部门
+                List<int> departList1 = Department.GetAllChildren(departID).Select(m => m.ID).ToList();//查询指定部门所能看到的部门，取交集
+                var result = Cabinet.GetCabinetsByDepart(departList.Intersect(departList1).ToList());
                 if (result.Count > 0)
                 {
                     var depart = Department.GetAll(result.Select(m => m.DepartmentID).ToList());
@@ -295,6 +320,56 @@ namespace CabinetAPI.Controllers
             }
         }
 
-
+        /// <summary>
+        /// 获取保险柜分布图
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet, Route("api/cabinet/map")]
+        public IHttpActionResult CabinetMap()
+        {
+            UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+            if (userCookie == null)
+            {
+                return Logout();
+            }
+            try
+            {
+                List<Cabinet> cabinetList = Cabinet.GetAll();
+                List<Department> departList = Department.GetAll();
+                Department root = departList.Find(m => m.ID == userCookie.DepartmentID);
+                return Success(FindCabinetTree(root, departList, cabinetList));
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+                return Failure(ex.Message);
+            }
+        }
+        private CabinetTree FindCabinetTree(Department root, List<Department> departList, List<Cabinet> cabinets)
+        {
+            CabinetTree tree = new CabinetTree();
+            tree.id = root.ID;
+            tree.type = 0;
+            tree.name = root.Name;
+            tree.children = new List<CabinetTree>();
+            departList.FindAll(m => m.ParentID == root.ID).ForEach(m =>
+            {
+                tree.children.Add(FindCabinetTree(m, departList, cabinets));
+            });
+            cabinets.FindAll(m => m.DepartmentID == root.ID).ForEach(m =>
+            {
+                tree.children.Add(new CabinetTree
+                {
+                    id = m.ID,
+                    type = 1,
+                    name = m.Name,
+                    data = new
+                    {
+                        warning = (m.Status == 0)
+                    }
+                });
+            });
+            return tree;
+        }
     }
 }

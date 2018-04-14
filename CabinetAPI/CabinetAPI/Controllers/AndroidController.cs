@@ -1,6 +1,8 @@
-﻿using CabinetData.Entities;
+﻿using CabinetAPI.Models;
+using CabinetData.Entities;
 using CabinetData.Entities.Principal;
 using Newtonsoft.Json;
+using NLog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -15,7 +17,15 @@ namespace CabinetAPI.Controllers
 {
     public class AndroidController : BaseController
     {
+        private Logger _logger = LogManager.GetLogger("消息队列");
+        /// <summary>
+        /// 心跳集合
+        /// </summary>
         public static ConcurrentDictionary<int, DateTime> HeartDictionary = new ConcurrentDictionary<int, DateTime>();
+        /// <summary>
+        /// 命令集合
+        /// </summary>
+        public static ConcurrentDictionary<int, int> CommandDictionary = new ConcurrentDictionary<int, int>();
         public static List<CabinetLog> CabinetLogQueue = new List<CabinetLog>();
         public static object logLock = new object();
 
@@ -133,6 +143,7 @@ namespace CabinetAPI.Controllers
 
         /// <summary>
         /// 请求命令接口
+        /// 请求开门 = 0,
         /// 正常开门 = 1,
         /// 密码错误 = 2,
         /// 正常关门 = 3,
@@ -161,16 +172,24 @@ namespace CabinetAPI.Controllers
                 var cabinet = Cabinet.GetByMac(request.Mac);
                 if (cabinet == null)
                     return Failure("未找到指定保险柜");
-                if (request.OperatorType == (int)OperatorTypeEnum.正常开门)
+                if (request.OperatorType == (int)OperatorTypeEnum.正常开门 || request.OperatorType == (int)OperatorTypeEnum.请求开门)
                 {
                     if (DateTime.Now.Hour < 9 || DateTime.Now.Hour > 17 || DateTime.Now.DayOfWeek == DayOfWeek.Sunday || DateTime.Now.DayOfWeek == DayOfWeek.Saturday)
                         request.OperatorType = (int)OperatorTypeEnum.非工作时间开门;
+                    //如果配置了需要确认开门,则设置为请求开门
+                    if (cabinet.NeedConfirm ?? false)
+                    {
+                        request.OperatorType = (int)OperatorTypeEnum.请求开门;
+                    }
+                    else
+                    {
+                        request.OperatorType = (int)OperatorTypeEnum.正常开门;
+                    }
                 }
                 else if (request.OperatorType == (int)OperatorTypeEnum.正常关门)
                 {
                     if (DateTime.Now.Hour < 9 || DateTime.Now.Hour > 17 || DateTime.Now.DayOfWeek == DayOfWeek.Sunday || DateTime.Now.DayOfWeek == DayOfWeek.Saturday)
                     {
-
                         request.OperatorType = (int)OperatorTypeEnum.非工作时间关门;
                     }
                 }
@@ -184,7 +203,33 @@ namespace CabinetAPI.Controllers
                     {
                         HeartDictionary.TryAdd(cabinet.ID, DateTime.Now);
                     }
+                    if (CommandDictionary.ContainsKey(cabinet.ID))
+                    {
+                        int type = -1;
+                        if (CommandDictionary.TryGetValue(cabinet.ID, out type))
+                        {
+                            if (type == (int)OperatorTypeEnum.允许开门)
+                            {
+                                return Success("允许开门");
+                            }
+                            else if (type == (int)OperatorTypeEnum.拒绝开门)
+                            {
+                                return Success("拒绝开门");
+                            }
+                            else if (type == (int)OperatorTypeEnum.拒绝语音)
+                            {
+                                return Success("拒绝语音");
+                            }
+                            else if (type == (int)OperatorTypeEnum.接受语音)
+                            {
+                                return Success("接受语音");
+                            }
+                        }
+                        return Success("允许开门");
+                    }
+                    return Success();
                 }
+                //请求开门 = 0,
                 //正常开门 = 1,
                 //密码错误 = 2,
                 //正常关门 = 3,
@@ -212,17 +257,17 @@ namespace CabinetAPI.Controllers
                     OperationType = request.OperatorType,
                     CreateTime = DateTime.Now,
                     CabinetIP = GetIP(),
-                    EventContent = (request.OperatorType == (int)OperatorTypeEnum.正常开门) ? JsonConvert.SerializeObject(request) : request.EventContent
+                    EventContent = (request.OperatorType == (int)OperatorTypeEnum.正常开门 || request.OperatorType == (int)OperatorTypeEnum.请求开门) ? JsonConvert.SerializeObject(request) : request.EventContent
                 };
                 CabinetLog.Add(log);
                 lock (logLock)
                     CabinetLogQueue.Add(log);
-                
-                if (request.OperatorType == (int)OperatorTypeEnum.请求语音)
+
+                if (request.OperatorType == (int)OperatorTypeEnum.请求开门)
                 {
-                    return Success("链接语音服务器");
+                    return Failure("等待审核");
                 }
-                return Success("success");
+                return Success();
             }
             catch (Exception ex)
             {
@@ -230,36 +275,10 @@ namespace CabinetAPI.Controllers
                 return Failure("上报失败");
             }
         }
-
-       
     }
 
 
-    public class CommandRequest
-    {
-        public string Mac { get; set; }
-        public string UserName { get; set; }
-
-        /// <summary>
-        /// 命令类型
-        /// </summary>
-        public int OperatorType { get; set; }
-
-        /// <summary>
-        /// 日志详细信息
-        /// </summary>
-        public string EventContent { get; set; }
-
-
-        /// 开门命令参数
-
-        public string Password { get; set; }//密码
-        public int Method { get; set; } //0为密码，1为指纹
-        public List<string> Photos { get; set; }//照片url
-
-        public List<string> FingerPrint { get; set; } //指纹url
-
-    }
+    
 
     public class RenamingMultipartFormDataStreamProvider : MultipartFormDataStreamProvider
     {

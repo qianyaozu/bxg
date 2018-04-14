@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CabinetData", "CabinetData\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CabinetUtility", "CabinetUtility\CabinetUtility.csproj", "{020A4BA5-AC6C-400A-92CE-1A4C8F15449F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CabinetAPI.Test", "CabinetAPI.Test\CabinetAPI.Test.csproj", "{C072AEE7-9C2E-4ECC-B03E-5E7487E8491D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndroidTest", "AndroidTest\AndroidTest.csproj", "{4A1F0ED0-F6C5-4CDA-BEDD-8E15FD36EF3F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{020A4BA5-AC6C-400A-92CE-1A4C8F15449F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{020A4BA5-AC6C-400A-92CE-1A4C8F15449F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{020A4BA5-AC6C-400A-92CE-1A4C8F15449F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C072AEE7-9C2E-4ECC-B03E-5E7487E8491D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C072AEE7-9C2E-4ECC-B03E-5E7487E8491D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C072AEE7-9C2E-4ECC-B03E-5E7487E8491D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C072AEE7-9C2E-4ECC-B03E-5E7487E8491D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A1F0ED0-F6C5-4CDA-BEDD-8E15FD36EF3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A1F0ED0-F6C5-4CDA-BEDD-8E15FD36EF3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A1F0ED0-F6C5-4CDA-BEDD-8E15FD36EF3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A1F0ED0-F6C5-4CDA-BEDD-8E15FD36EF3F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

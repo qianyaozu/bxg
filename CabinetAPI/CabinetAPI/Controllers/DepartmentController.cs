@@ -31,6 +31,7 @@ namespace CabinetAPI.Controllers
                 {
                     return Logout();
                 }
+                
                 List<Department> departList = Department.GetAll();
                 Department root = departList.Find(m => m.ID == userCookie.DepartmentID);
               
@@ -58,6 +59,35 @@ namespace CabinetAPI.Controllers
                 //    });
                 //});
                 return Success(FindTree(root, departList));
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+                return Failure("查询错误");
+            }
+        }
+
+
+        
+
+        /// <summary>
+        /// 获取登陆用户的下级部门
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet, Route("api/department/lowerdepart")]
+        public IHttpActionResult LowerDepartment()
+        {
+            try
+            {
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Logout();
+                }
+
+                List<Department> departList = Department.GetChildren(userCookie.DepartmentID);
+                 
+                return Success(departList.Select(m => new DepartmentLower { label = m.Name, value = m.ID }).ToList());
             }
             catch (Exception ex)
             {
@@ -272,7 +302,15 @@ namespace CabinetAPI.Controllers
                     search.PageIndex = 1;
                 if (search.PageSize == 0)
                     search.PageSize = 20;
-                var result = Department.GetDepartment(search);
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Logout();
+                }
+                List<Department> departList = Department.GetAllChildren(userCookie.DepartmentID);
+                if (!string.IsNullOrEmpty(search.DepartmentName))
+                    departList.FindAll(m => m.Name.Contains(search.DepartmentName)); 
+                var result = Department.GetDepartment(search, departList.Select(m=>m.ID).ToList());
                 if (result.Items.Count > 0)
                 {
                     var list = Department.GetAll(result.Items.ToList().Select(m => m.ID).ToList());
@@ -289,5 +327,8 @@ namespace CabinetAPI.Controllers
                 return Failure("查询失败");
             }
         }
+
+
+
     }
 }

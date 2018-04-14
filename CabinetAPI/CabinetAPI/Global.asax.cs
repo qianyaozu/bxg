@@ -64,7 +64,7 @@ namespace CabinetAPI
                                 });
                             }
                         }
-                        else if ((AndroidController.HeartDictionary.ContainsKey(cabinet.ID) && AndroidController.HeartDictionary[cabinet.ID].AddSeconds(30) < DateTime.Now) || !AndroidController.HeartDictionary.ContainsKey(cabinet.ID))
+                        else if ((AndroidController.HeartDictionary.ContainsKey(cabinet.ID) && AndroidController.HeartDictionary[cabinet.ID].AddSeconds(30) < DateTime.Now) )
                         {
                             //下线
                             offLine.Add(cabinet.ID);

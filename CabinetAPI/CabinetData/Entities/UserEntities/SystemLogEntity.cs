@@ -3,6 +3,7 @@ using System;
 using CabinetData.Base;
 using CabinetData.Entities.QueryEntities;
 using DapperExtensions;
+using System.Collections.Generic;
 
 namespace CabinetData.Entities
 {
@@ -11,9 +12,9 @@ namespace CabinetData.Entities
 	/// </summary>
 	partial class SystemLog
 	{
-        public static Page<SystemLog> GetSystemLogs(SystemLogSearchModel search)
+        public static Page<SystemLog> GetSystemLogs(SystemLogSearchModel search,List<int> departList)
         {
-            var sql = "select * from SystemLog where 1=1 ";
+            var sql = "select * from SystemLog where DepartmentID in @DepartmentID";
 
             if (!string.IsNullOrEmpty(search.UserName))
             {
@@ -28,9 +29,10 @@ namespace CabinetData.Entities
             {
                 sql += " and CreateTime <= '" + search.EndTime + "'";
             }
+            sql += " order by CreateTime desc";
             using (var cn = Database.GetDbConnection())
             {
-                return cn.PagedQuery<SystemLog>(search.PageIndex, search.PageSize, sql, new { });
+                return cn.PagedQuery<SystemLog>(search.PageIndex, search.PageSize, sql, new { DepartmentID = departList });
             }
         }
 

@@ -84,6 +84,15 @@ namespace CabinetData.Entities
             }
         }
 
+        public static List<Department> GetAllChildren(int id)
+        {
+            List<int> idList = GetChildrenID(new List<int> { id });
+            var sql = "select * from Department where ID in @ID ";
+            using (var cn = Database.GetDbConnection())
+            {
+                return cn.Query<Department>(sql, new { ID = idList }).ToList();
+            }
+        }
         public static void Add(Department department)
         {
             using (var cn = Database.GetDbConnection())
@@ -99,14 +108,10 @@ namespace CabinetData.Entities
             }
         }
 
-        public static Page<DepartmentA> GetDepartment(DepartmentSearchModel search)
+        public static Page<DepartmentA> GetDepartment(DepartmentSearchModel search,List<int> depart)
         {
 
-            var sql = "select * from Department where 1=1 ";
-            if (!string.IsNullOrEmpty(search.DepartmentName))
-            {
-                sql += " and Name like '%" + search.DepartmentName + "%'";
-            }
+            var sql = "select * from Department where ID in @ID "; 
             List<int> IDList = new List<int>();
             if ((search.ParentID ?? 0) != 0)
             {
@@ -116,7 +121,7 @@ namespace CabinetData.Entities
 
             using (var cn = Database.GetDbConnection())
             {
-                return cn.PagedQuery<DepartmentA>(search.PageIndex, search.PageSize, sql, new { IDs = IDList });
+                return cn.PagedQuery<DepartmentA>(search.PageIndex, search.PageSize, sql, new { IDs = IDList, ID = depart });
             }
         }
 
@@ -125,7 +130,7 @@ namespace CabinetData.Entities
         /// </summary>
         /// <param name="parentid"></param>
         /// <returns></returns>
-        public static List<int> GetChildrenID(List<int> parentid)
+        private static List<int> GetChildrenID(List<int> parentid)
         {
             List<int> resultList = new List<int>();
             resultList.AddRange(parentid);

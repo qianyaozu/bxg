@@ -1,4 +1,5 @@
 ﻿using CabinetAPI.Filter;
+using CabinetAPI.Models;
 using CabinetData.Entities;
 using CabinetData.Entities.Principal;
 using CabinetData.Entities.QueryEntities;
@@ -35,7 +36,13 @@ namespace CabinetAPI.Controllers
                     search.PageIndex = 1;
                 if (search.PageSize == 0)
                     search.PageSize = 20;
-                var result = CabinetLog.GetCabinets(search);
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Logout();
+                }
+                List<Department> departList = Department.GetAllChildren(userCookie.DepartmentID);
+                var result = CabinetLog.GetCabinets(search, departList.Select(m=>m.ID).ToList());
                 if (result.Items.Count > 0)
                 {
                     var cabinet = Cabinet.GetCabinetByIds(result.Items.Select(m => m.CabinetID).ToList());
@@ -95,8 +102,8 @@ namespace CabinetAPI.Controllers
                     return Logout();
                 DateTime lastTime = ConvertStringToDateTime(time);
                 var list = new List<CabinetLog>();
-                List<CommandModel> cmdList = new List<Controllers.CommandModel>();
-                var departList = Department.GetChildrenID(new List<int>() { userCookie.DepartmentID });
+                List<CommandModel> cmdList = new List<CommandModel>();
+                var departList = Department.GetChildren(userCookie.DepartmentID).Select(m => m.ID).ToList();
                 lock (AndroidController.logLock)
                     list = AndroidController.CabinetLogQueue.ToList().FindAll(m => m.CreateTime >= lastTime && departList.Contains(m.DepartmentID ?? 0));
 
@@ -107,7 +114,7 @@ namespace CabinetAPI.Controllers
                 var allCanbinet = Cabinet.GetCabinetByIds(list.Select(m => m.CabinetID).ToList());
                 list.ForEach(m =>
                 {
-                    CommandModel cmd = new Controllers.CommandModel();
+                    CommandModel cmd = new CommandModel();
                     cmd.CabinetID = m.CabinetID;
                     cmd.CabinetMac = allCanbinet.Find(n => n.ID == m.CabinetID)?.AndroidMac;
                     cmd.CabinetName = allCanbinet.Find(n => n.ID == m.CabinetID)?.Name;
@@ -115,7 +122,12 @@ namespace CabinetAPI.Controllers
                     cmd.OperateTime = m.OperateTime.Value.ToString("yyyy-MM-dd HH:mm:ss");
                     cmd.OperatorName = m.OperatorName;
                     cmd.OperationType = m.OperationType;
-                    cmd.EventContent = m.EventContent;
+                    cmd.EventContent = m.EventContent; 
+                    cmd.WindowType = 0;
+                    if (m.OperationType == 2 || m.OperationType == 4 || m.OperationType == 5 || m.OperationType == 6 || m.OperationType == 7 || m.OperationType == 8 || m.OperationType == 9 || m.OperationType == 10)
+                        cmd.WindowType = 1;
+                    if (m.OperationType == 15 || m.OperationType == 0)
+                        cmd.WindowType = 2;
                     cmdList.Add(cmd);
                 });
                 return Success(cmdList);
@@ -155,7 +167,13 @@ namespace CabinetAPI.Controllers
                 UserInfo userCookie = cache as UserInfo;
                 if (userCookie == null)
                     return Logout();
-
+                if (cmd.OperationType == (int)OperatorTypeEnum.允许开门 || cmd.OperationType == (int)OperatorTypeEnum.拒绝开门|| cmd.OperationType == (int)OperatorTypeEnum.接受语音 || cmd.OperationType == (int)OperatorTypeEnum.拒绝语音)
+                {
+                    if (AndroidController.CommandDictionary.ContainsKey(cmd.CabinetID))
+                        AndroidController.CommandDictionary[cmd.CabinetID] = cmd.OperationType;
+                    else
+                        AndroidController.CommandDictionary.TryAdd(cmd.CabinetID, cmd.OperationType);
+                }
                 CabinetLog log = new CabinetLog();
                 log.CabinetID = cmd.CabinetID;
                 log.OperationType = cmd.OperationType;
@@ -187,7 +205,7 @@ namespace CabinetAPI.Controllers
                 return BadRequest();
             try
             {
-                var result = CabinetLog.DepartAlarmStatistics(query.DepartmentID, query.From  , query.To );
+                var result = CabinetLog.DepartAlarmStatistics(query.DepartmentID, query.From, query.To);
                 return Success(result);
             }
             catch (Exception ex)
@@ -210,7 +228,8 @@ namespace CabinetAPI.Controllers
                 return BadRequest();
             try
             {
-                var result = CabinetLog.DepartMonthAlarmStatistics(query.DepartmentID, query.From, query.To);
+                
+                var result = CabinetLog.DepartMonthAlarmStatistics(query.DepartmentID, query.From, query.To );
                 return Success(result);
             }
             catch (Exception ex)
@@ -232,7 +251,8 @@ namespace CabinetAPI.Controllers
                 return BadRequest();
             try
             {
-                var result = CabinetLog.DepartAlarmTypeStatistics(query.DepartmentID, query.From, query.To);
+                
+                var result = CabinetLog.DepartAlarmTypeStatistics(query.DepartmentID, query.From, query.To );
                 return Success(result);
             }
             catch (Exception ex)
@@ -244,75 +264,8 @@ namespace CabinetAPI.Controllers
     }
 
 
-    public class DepartAlarmStatisticsModel
-    {
-        public string From { get; set; }
+   
 
-        public string To { get; set; }
-        public int DepartmentID { get; set; }
-    }
-
-
-    public class CommandDeal
-    {
-        public int CabinetID { get; set; }
-        
-        public int OperationType { get; set; } 
-        /// <summary>
-        /// 处理意见
-        /// </summary>
-        public string EventContent { get; set; }
-
-        public string Remark { get; set; } 
-
-    }
-
-
-    /// <summary>
-    /// 命令信息
-    /// </summary>
-    public class CommandModel
-    {
-        public int CabinetID { get; set; }
-        /// <summary>
-        /// mac地址,语音房间号 =mac
-        /// </summary>
-        public String CabinetMac { get; set; }
-        /// <summary>
-        /// 部门名称
-        /// </summary>
-        public string DepartmentName { get; set; }
-        /// <summary>
-        /// 保险柜名称
-        /// </summary>
-        public string CabinetName { get; set; }
-        /// <summary>
-        /// 操作人姓名
-        /// </summary>
-        public string OperatorName { get; set; }
-        /// <summary>
-        /// 发生时间
-        /// </summary>
-        public string OperateTime { get; set; }
-        /// <summary>
-        /// 命令类型
-        /// 正常开门 = 1,
-        /// 密码错误 = 2,
-        /// 正常关门 = 3,
-        /// 非工作时间开门 = 4,
-        /// 非工作时间关门 = 5,
-        /// 外部电源断开 = 6,
-        /// 备份电源电压低 = 7,
-        /// 未按规定关门 = 8,
-        /// 强烈震动 = 9,
-        /// 网络断开 = 10
-        /// 请求语音 = 15,
-        /// 结束语音 = 16,
-        /// </summary>
-        public int OperationType { get; set; }
-        /// <summary>
-        /// 事件信息
-        /// </summary>
-        public string EventContent { get; set; }
-    }
+   
+     
 }

@@ -132,6 +132,10 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\CommandDeal.cs" />
+    <Compile Include="Models\CommandModel.cs" />
+    <Compile Include="Models\CommandRequest.cs" />
+    <Compile Include="Models\DepartAlarmStatisticsModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -153,7 +157,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CabinetData\CabinetData.csproj">

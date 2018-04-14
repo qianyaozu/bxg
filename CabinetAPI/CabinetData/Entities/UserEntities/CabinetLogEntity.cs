@@ -24,9 +24,9 @@ namespace CabinetData.Entities
         }
 
 
-        public static Page<CabinetLogA> GetCabinets(CabinetLogSearchModel search)
+        public static Page<CabinetLogA> GetCabinets(CabinetLogSearchModel search,List<int> departList)
         {
-            var sql = "select * from CabinetLog where 1=1 ";
+            var sql = "select * from CabinetLog where DepartmentID in @DepartmentID ";
             if ((search.CabinetID ?? 0) > 0)
             {
                 sql += " and CabinetID = " + search.CabinetID;
@@ -54,9 +54,10 @@ namespace CabinetData.Entities
             {
                 sql += " and CreateTime <= '" + search.EndTime + "'";
             }
+            sql += " order by CreateTime desc";
             using (var cn = Database.GetDbConnection())
             {
-                return cn.PagedQuery<CabinetLogA>(search.PageIndex, search.PageSize, sql, new { });
+                return cn.PagedQuery<CabinetLogA>(search.PageIndex, search.PageSize, sql, new { DepartmentID= departList });
             }
         }
 
@@ -100,7 +101,7 @@ namespace CabinetData.Entities
         {
             using (var cn = Database.GetDbConnection())
             {
-                var list = cn.Query<Department>("select * from Department where ParentID=@ID", new { ID = departID }).ToList();
+                var list = Department.GetAllChildren(departID);
                 if (list.Count == 0)
                     return new List<DepartmentStatistics>();
                 return cn.Query<DepartmentStatistics>("select DepartmentID,count(1) as Count from Cabinetlog where DepartmentID in @ID and createtime between @Start and @End and OperationType in(2,4,5,6,7,8,9,10) group by DepartmentID", new { ID = list.Select(m => m.ID).ToList(), Start = from, End = to }).ToList();
@@ -118,7 +119,7 @@ namespace CabinetData.Entities
         {
             using (var cn = Database.GetDbConnection())
             {
-                var list = cn.Query<Department>("select * from Department where ParentID=@ID", new { ID = departID }).ToList();
+                var list = Department.GetAllChildren(departID);
                 if (list.Count == 0)
                     return new List<DepartmentMonthStatistics>();
                 return cn.Query<DepartmentMonthStatistics>("select Year(CreateTime) as [Year],Month(CreateTime) as [Month],count(1) as Count from Cabinetlog where DepartmentID in @ID and createtime between @Start and @End and OperationType in(2,4,5,6,7,8,9,10) group by Year(CreateTime),Month(CreateTime)", new { ID = list.Select(m => m.ID).ToList(), Start = from, End = to }).ToList();
@@ -137,7 +138,7 @@ namespace CabinetData.Entities
         {
             using (var cn = Database.GetDbConnection())
             {
-                var list = cn.Query<Department>("select * from Department where ParentID=@ID", new { ID = departID }).ToList();
+                var list = Department.GetAllChildren(departID);
                 if (list.Count == 0)
                     return new List<DepartmentAlarmTypeStatistics>();
                 return cn.Query<DepartmentAlarmTypeStatistics>("select OperationType,count(1) as Count from Cabinetlog where DepartmentID in @ID and createtime between @Start and @End and OperationType in(2,4,5,6,7,8,9,10) group by OperationType", new { ID = list.Select(m => m.ID).ToList(), Start = from, End = to }).ToList();

@@ -1,6 +1,7 @@
 ﻿using CabinetAPI.Filter;
 using CabinetData.Entities;
 using CabinetData.Entities.QueryEntities;
+using CabinetUtility;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -33,7 +34,13 @@ namespace CabinetAPI.Controllers
                     search.PageIndex = 1;
                 if (search.PageSize == 0)
                     search.PageSize = 20;
-                var result = SystemLog.GetSystemLogs(search);
+                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (userCookie == null)
+                {
+                    return Logout();
+                }
+                List<Department> departList = Department.GetAllChildren(userCookie.DepartmentID);
+                var result = SystemLog.GetSystemLogs(search, departList.Select(m=>m.ID).ToList());
                 return Success(result);
             }
             catch (Exception ex)

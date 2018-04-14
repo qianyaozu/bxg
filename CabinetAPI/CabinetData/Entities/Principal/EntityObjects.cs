@@ -230,6 +230,23 @@ namespace CabinetData.Entities
 		public Boolean EnableDelete { get; set; }
 
 	}
+    public class DepartmentLower
+    {
+        public string label { get; set; }
+        public int value { get; set; }
+    }
+
+
+    public class CabinetTree
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+
+        public dynamic data { get; set; }
+
+        public int type { get; set; }
+        public List<CabinetTree> children { get; set; }
+    }
 
     public class DepartmentTree
     {
@@ -380,7 +397,12 @@ namespace CabinetData.Entities
 		/// </summary>
 		public Int32? Status { get; set; }
 
-	}
+        /// <summary>
+        /// 上次修改密码时间
+        /// </summary>
+        public DateTime? LastPasswordTime { get; set; }
+
+    }
 
 	public partial class SystemLog : BaseModel
 	{
