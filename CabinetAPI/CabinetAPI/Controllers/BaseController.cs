@@ -11,7 +11,12 @@ namespace CabinetAPI.Controllers
 {
     public class BaseController : ApiController
     {
-        public Logger logger = LogManager.GetCurrentClassLogger();
+        public Logger logger ;
+
+        public BaseController()
+        {
+            logger = LogManager.GetCurrentClassLogger();
+        }
         #region Action返回结果通用方法
         [HiddenApi]
         /// <summary>

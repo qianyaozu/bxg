@@ -71,6 +71,7 @@ namespace CabinetAPI.Controllers
                     return Failure("用户名不存在");
                 if (user.Status == 0)
                     return Failure("此用户已禁用，请联系管理员");
+                
                 if (user.Password != AESAlgorithm.Encrypto(model.Password))
                 {
                     model.CreateTime = DateTime.Now;
@@ -83,7 +84,7 @@ namespace CabinetAPI.Controllers
                 var token = Guid.NewGuid().ToString();
 
 
-
+               
                 SystemLog.Add(new SystemLog
                 {
                     Action = "Login",
@@ -97,6 +98,8 @@ namespace CabinetAPI.Controllers
                     RealName = user.RealName
                 });
                 Department depart = Department.GetOne(user.DepartmentID);
+                if (user.LastPasswordTime == null)
+                    user.LastPasswordTime = DateTime.Now;
                 var data = new
                 {
                     UserID = user.ID,
@@ -108,10 +111,12 @@ namespace CabinetAPI.Controllers
                 };
 
                 WriteCookie("token", token);
-                CacheHelper.SetCache(token, user, new TimeSpan(2, 0, 0)); //2小时缓存
+                CacheHelper.SetCache(token, user); //2小时缓存
+               
                 return Success(data);//返回用户权限
             }catch(Exception e)
             {
+                logger.Error(e);
                 return Failure(e.Message);
             }
             

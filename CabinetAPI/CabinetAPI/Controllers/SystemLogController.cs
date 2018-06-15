@@ -41,6 +41,14 @@ namespace CabinetAPI.Controllers
                 }
                 List<Department> departList = Department.GetAllChildren(userCookie.DepartmentID);
                 var result = SystemLog.GetSystemLogs(search, departList.Select(m=>m.ID).ToList());
+                if (result.Items.Count > 0)
+                {
+                    var list = Department.GetAll(result.Items.ToList().Select(m => m.ID).ToList());
+                    result.Items.ForEach(item =>
+                    {
+                        item.DepartmentName = list.Find(m => m.ID == item.DepartmentID)?.Name;
+                    });
+                }
                 return Success(result);
             }
             catch (Exception ex)

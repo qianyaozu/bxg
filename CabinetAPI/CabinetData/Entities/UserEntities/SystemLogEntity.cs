@@ -12,7 +12,7 @@ namespace CabinetData.Entities
 	/// </summary>
 	partial class SystemLog
 	{
-        public static Page<SystemLog> GetSystemLogs(SystemLogSearchModel search,List<int> departList)
+        public static Page<SystemLogA> GetSystemLogs(SystemLogSearchModel search,List<int> departList)
         {
             var sql = "select * from SystemLog where DepartmentID in @DepartmentID";
 
@@ -32,7 +32,7 @@ namespace CabinetData.Entities
             sql += " order by CreateTime desc";
             using (var cn = Database.GetDbConnection())
             {
-                return cn.PagedQuery<SystemLog>(search.PageIndex, search.PageSize, sql, new { DepartmentID = departList });
+                return cn.PagedQuery<SystemLogA>(search.PageIndex, search.PageSize, sql, new { DepartmentID = departList });
             }
         }
 

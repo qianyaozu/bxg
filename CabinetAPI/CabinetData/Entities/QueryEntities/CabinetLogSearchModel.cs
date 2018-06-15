@@ -14,8 +14,11 @@ namespace CabinetData.Entities.QueryEntities
         /// 保险柜名称
         /// </summary>
         public string CabinetName { get; set; }
-         
 
+        /// <summary>
+        /// 部门ID
+        /// </summary>
+        public int? DepartmentID { get; set; }
         /// <summary>
         /// 报警类型
         /// </summary>

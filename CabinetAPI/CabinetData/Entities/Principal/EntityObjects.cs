@@ -113,6 +113,7 @@ namespace CabinetData.Entities
     }
     public class CabinetLogA: CabinetLog
     {
+        public string CabinetName { get; set; }
         public string CabinetCode { get; set; }
         public string DepartmentName { get; set; }
     }
@@ -458,5 +459,13 @@ namespace CabinetData.Entities
 		public String ClientIP { get; set; }
 
 	}
+
+
+
+    public partial class SystemLogA:SystemLog
+    {
+        public string DepartmentName { get; set; }
+
+    }
 
 }

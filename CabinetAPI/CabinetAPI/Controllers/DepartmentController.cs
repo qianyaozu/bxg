@@ -85,7 +85,7 @@ namespace CabinetAPI.Controllers
                     return Logout();
                 }
 
-                List<Department> departList = Department.GetChildren(userCookie.DepartmentID);
+                List<Department> departList = Department.GetAllChildren(userCookie.DepartmentID);
                  
                 return Success(departList.Select(m => new DepartmentLower { label = m.Name, value = m.ID }).ToList());
             }

@@ -11,7 +11,6 @@ namespace CabinetData.Entities.Principal
     /// </summary>
     public enum OperatorTypeEnum
     {
-        请求开门 = 0,
         正常开门 = 1,
         密码错误 = 2,
         正常关门 = 3,
@@ -48,11 +47,18 @@ namespace CabinetData.Entities.Principal
 
     public enum ModuleEnum
     {
-        用户管理 = 0,
-        部门管理 = 1,
-        保险柜管理 = 2,
-        系统日志 = 3,
-        保险柜日志 = 4,
+        首页查询=0,
+        保险柜分布=1,
+        报警类型统计=2,
+        单位报警统计=3,
+        每月报警统计=4,
+        监控日志管理=5,
+        用户中心管理 = 6,
+        使用部门管理 = 7,
+        保险柜管理 = 8,
+        系统日志 = 9,
+        保险柜请求 = 10,
+        权限管理=11
     }
 
 }

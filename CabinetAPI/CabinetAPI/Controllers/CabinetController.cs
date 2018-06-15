@@ -59,8 +59,8 @@ namespace CabinetAPI.Controllers
                 });
                 cabinet.CreateTime = DateTime.Now;
                 cabinet.IsOnline = false;
-                if(!string.IsNullOrEmpty(cabinet.FirstContactPassword))
-                    cabinet.FirstContactPassword= AESAlgorithm.Encrypto(cabinet.FirstContactPassword);
+                if (!string.IsNullOrEmpty(cabinet.FirstContactPassword))
+                    cabinet.FirstContactPassword = AESAlgorithm.Encrypto(cabinet.FirstContactPassword);
                 if (!string.IsNullOrEmpty(cabinet.SecondContactPassword))
                     cabinet.SecondContactPassword = AESAlgorithm.Encrypto(cabinet.SecondContactPassword);
                 Cabinet.Add(cabinet);
@@ -130,7 +130,7 @@ namespace CabinetAPI.Controllers
                 if (old != null && old.ID != cabinet.ID)
                     return Failure("该硬件编码已经被使用");
 
-               
+
                 SystemLog.Add(new SystemLog
                 {
                     Action = "EditCabinet",
@@ -177,7 +177,7 @@ namespace CabinetAPI.Controllers
         /// <param name="status"></param>
         /// <returns></returns>
         [HttpPost, Route("api/cabinet/updatestatus")]
-        public IHttpActionResult UpdateCabinetStatus(int id=0,int status=-1)
+        public IHttpActionResult UpdateCabinetStatus(int id = 0, int status = -1)
         {
             if (id == 0 || status == -1)
                 return BadRequest();
@@ -192,7 +192,8 @@ namespace CabinetAPI.Controllers
                 cab.Status = status;
                 Cabinet.Update(cab);
                 return Success();
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 logger.Error(ex);
                 return Failure("更新失败");
@@ -252,7 +253,7 @@ namespace CabinetAPI.Controllers
         {
             try
             {
-                
+
                 if (search == null)
                     return BadRequest();
                 if (search.PageIndex == 0)
@@ -267,7 +268,7 @@ namespace CabinetAPI.Controllers
                 List<Department> departList = Department.GetAllChildren(userCookie.DepartmentID);
                 if (!string.IsNullOrEmpty(search.DepartmentName))
                     departList = departList.FindAll(m => m.Name.Contains(search.DepartmentName));
-                var result = Cabinet.GetCabinets(search, departList.Select(m=>m.ID).ToList());
+                var result = Cabinet.GetCabinets(search, departList.Select(m => m.ID).ToList());
                 if (result.Items.Count > 0)
                 {
                     var depart = Department.GetAll(result.Items.Select(m => m.DepartmentID).ToList());
@@ -300,7 +301,7 @@ namespace CabinetAPI.Controllers
                 {
                     return Logout();
                 }
-                List<int> departList = Department.GetAllChildren(userCookie.DepartmentID).Select(m=>m.ID).ToList();//我的权限所能看到的部门
+                List<int> departList = Department.GetAllChildren(userCookie.DepartmentID).Select(m => m.ID).ToList();//我的权限所能看到的部门
                 List<int> departList1 = Department.GetAllChildren(departID).Select(m => m.ID).ToList();//查询指定部门所能看到的部门，取交集
                 var result = Cabinet.GetCabinetsByDepart(departList.Intersect(departList1).ToList());
                 if (result.Count > 0)
@@ -348,7 +349,7 @@ namespace CabinetAPI.Controllers
         private CabinetTree FindCabinetTree(Department root, List<Department> departList, List<Cabinet> cabinets)
         {
             CabinetTree tree = new CabinetTree();
-            tree.id = root.ID;
+            tree.id = 100000000 + root.ID;
             tree.type = 0;
             tree.name = root.Name;
             tree.children = new List<CabinetTree>();
@@ -365,7 +366,7 @@ namespace CabinetAPI.Controllers
                     name = m.Name,
                     data = new
                     {
-                        warning = (m.Status == 0)
+                        warning = (m.Status != 0)
                     }
                 });
             });

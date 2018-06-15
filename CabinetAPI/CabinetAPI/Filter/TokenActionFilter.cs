@@ -25,12 +25,12 @@ namespace CabinetAPI.Filter
                     }
                     else if (CabinetUtility.CacheHelper.GetCache(token) == null)
                     {
-                        actionContext.Response = actionContext.Request.CreateResponse(HttpStatusCode.OK, new CommonResponse() { State = 2 });
+                        //actionContext.Response = actionContext.Request.CreateResponse(HttpStatusCode.OK, new CommonResponse() { State = 2 });
                     }
                 }
                 catch (Exception ex)
                 {
-
+                    
                 }
             }
         }

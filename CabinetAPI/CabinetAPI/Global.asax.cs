@@ -4,6 +4,7 @@ using CabinetData.Entities.Principal;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,7 +34,8 @@ namespace CabinetAPI
                     lock (AndroidController.logLock)
                         AndroidController.CabinetLogQueue.RemoveAll(m => m.CreateTime.AddMinutes(5) < DateTime.Now);
 
-                }catch(Exception ex)
+                }
+                catch (Exception ex)
                 {
                     logger.Error(ex);
                 }
@@ -51,24 +53,27 @@ namespace CabinetAPI
                             {
                                 //上线
                                 onLine.Add(cabinet.ID);
-                                logs.Add(new CabinetData.Entities.CabinetLog
+                                var log = new CabinetData.Entities.CabinetLog
                                 {
                                     CabinetID = cabinet.ID,
-                                    DepartmentID=cabinet.DepartmentID,
+                                    DepartmentID = cabinet.DepartmentID,
                                     OperatorName = "",
                                     OperateTime = DateTime.Now,
                                     OperationType = (int)OperatorTypeEnum.上线,
                                     CreateTime = DateTime.Now,
                                     CabinetIP = "",
                                     EventContent = ""
-                                });
+                                };
+                                logs.Add(log);
+                                lock (AndroidController.logLock)
+                                    AndroidController.CabinetLogQueue.Add(log);
                             }
                         }
-                        else if ((AndroidController.HeartDictionary.ContainsKey(cabinet.ID) && AndroidController.HeartDictionary[cabinet.ID].AddSeconds(30) < DateTime.Now) )
+                        else if ((AndroidController.HeartDictionary.ContainsKey(cabinet.ID) && AndroidController.HeartDictionary[cabinet.ID].AddSeconds(30) < DateTime.Now))
                         {
                             //下线
                             offLine.Add(cabinet.ID);
-                            logs.Add(new CabinetData.Entities.CabinetLog
+                            var log = new CabinetData.Entities.CabinetLog
                             {
                                 CabinetID = cabinet.ID,
                                 DepartmentID = cabinet.DepartmentID,
@@ -78,7 +83,10 @@ namespace CabinetAPI
                                 CreateTime = DateTime.Now,
                                 CabinetIP = "",
                                 EventContent = "超时下线"
-                            });
+                            };
+                            logs.Add(log);
+                            lock (AndroidController.logLock)
+                                AndroidController.CabinetLogQueue.Add(log);
                             DateTime dt;
                             AndroidController.HeartDictionary.TryRemove(cabinet.ID, out dt);
                         }
@@ -103,6 +111,7 @@ namespace CabinetAPI
 
         private void InitDB()
         {
+            #region 初始化部门
             Department depart = Department.GetOne("根组织");
             if (depart == null)
             {
@@ -115,6 +124,8 @@ namespace CabinetAPI
                 });
                 depart = Department.GetOne("根组织");
             }
+            #endregion
+            #region 初始化管理员
             UserInfo user = UserInfo.GetOne("admin");
             if (user == null)
             {
@@ -126,9 +137,36 @@ namespace CabinetAPI
                     Password = CabinetUtility.Encryption.AESAlgorithm.Encrypto("admin"),
                     RealName = "管理员",
                     CreateTime = DateTime.Now,
-                    Status = 1
+                    Status = 1,
+                    LastPasswordTime = DateTime.Now
                 });
             }
+            #endregion
+
+            #region 初始化权限
+            if (Role_Module.Get(0).Count == 0)
+            {
+                List<Role_Module> roleList = new List<Role_Module>();
+                for (int i = 1; i < 5; i++)
+                {
+                    for (int j = 0; j < 12; j++)
+                    {
+                        Role_Module role = new CabinetData.Entities.Role_Module();
+                        role.RoleID = i;
+                        role.ModuleID = j;
+                        role.ModuleName = Enum.GetName(typeof(ModuleEnum), j);
+                        role.EnableAdd = true;
+                        role.EnableDelete = true;
+                        role.EnableEdit = true;
+                        role.EnableView = true;
+                        roleList.Add(role);
+                    }
+                }
+                Role_Module.Insert(roleList);
+            }
+
+            #endregion
+
         }
     }
 }

@@ -16,7 +16,6 @@ namespace AndroidTest
 {
     public partial class Form1 : Form
     {
-        //请求开门 = 0,
         //正常开门 = 1,
         //密码错误 = 2,
         //正常关门 = 3,
@@ -39,11 +38,9 @@ namespace AndroidTest
         private string mac = "";
         private void Form1_Load(object sender, EventArgs e)
         {
-            textBox1.Text = server = "192.168.2.63:22486";
-            textBox2.Text = mac = "yangzhou001";
-            Thread th = new Thread(Heart);
-            th.IsBackground = true;
-            th.Start();
+            textBox1.Text = server = "47.98.230.218:8080";
+            textBox2.Text = mac = "你的mac地址，可以模拟一个";
+
         }
         private string Command(CommandRequest cmd)
         {
@@ -92,6 +89,19 @@ namespace AndroidTest
             };
             string result = Command(cmd);
             richTextBox1.AppendText(no + ":" + result + Environment.NewLine);
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            server = textBox1.Text;
+            mac = textBox2.Text ;
+            textBox1.Enabled = false;
+            textBox2.Enabled = false;
+            button1.Enabled = false;
+            button3.Enabled = true;
+            Thread th = new Thread(Heart);
+            th.IsBackground = true;
+            th.Start();
         }
     }
 }

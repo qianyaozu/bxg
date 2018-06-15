@@ -143,7 +143,6 @@ namespace CabinetAPI.Controllers
 
         /// <summary>
         /// 请求命令接口
-        /// 请求开门 = 0,
         /// 正常开门 = 1,
         /// 密码错误 = 2,
         /// 正常关门 = 3,
@@ -169,22 +168,36 @@ namespace CabinetAPI.Controllers
                 return Failure("必须指定mac地址");
             try
             {
+                _logger.Info(JsonConvert.SerializeObject(request));
                 var cabinet = Cabinet.GetByMac(request.Mac);
                 if (cabinet == null)
                     return Failure("未找到指定保险柜");
-                if (request.OperatorType == (int)OperatorTypeEnum.正常开门 || request.OperatorType == (int)OperatorTypeEnum.请求开门)
+                if (request.OperatorType == (int)OperatorTypeEnum.正常开门)
                 {
+                    if (request.Method == 0)
+                    {
+                        if (string.IsNullOrEmpty(request.Password))
+                        {
+                            return Failure("密码不得为空");
+                        }
+                        if (cabinet.FirstContactPassword != request.Password && cabinet.SecondContactPassword != request.Password)
+                        {
+                            CabinetLog.Add(new CabinetLog
+                            {
+                                CabinetID = cabinet.ID,
+                                DepartmentID = cabinet.DepartmentID,
+                                OperatorName = request.UserName,
+                                OperateTime = DateTime.Now,
+                                OperationType = request.OperatorType,
+                                CreateTime = DateTime.Now,
+                                CabinetIP = GetIP(),
+                                EventContent = "密码错误"
+                            });
+                            return Failure("密码错误");
+                        }
+                    }
                     if (DateTime.Now.Hour < 9 || DateTime.Now.Hour > 17 || DateTime.Now.DayOfWeek == DayOfWeek.Sunday || DateTime.Now.DayOfWeek == DayOfWeek.Saturday)
                         request.OperatorType = (int)OperatorTypeEnum.非工作时间开门;
-                    //如果配置了需要确认开门,则设置为请求开门
-                    if (cabinet.NeedConfirm ?? false)
-                    {
-                        request.OperatorType = (int)OperatorTypeEnum.请求开门;
-                    }
-                    else
-                    {
-                        request.OperatorType = (int)OperatorTypeEnum.正常开门;
-                    }
                 }
                 else if (request.OperatorType == (int)OperatorTypeEnum.正常关门)
                 {
@@ -206,7 +219,7 @@ namespace CabinetAPI.Controllers
                     if (CommandDictionary.ContainsKey(cabinet.ID))
                     {
                         int type = -1;
-                        if (CommandDictionary.TryGetValue(cabinet.ID, out type))
+                        if (CommandDictionary.TryRemove(cabinet.ID, out type))
                         {
                             if (type == (int)OperatorTypeEnum.允许开门)
                             {
@@ -225,11 +238,9 @@ namespace CabinetAPI.Controllers
                                 return Success("接受语音");
                             }
                         }
-                        return Success("允许开门");
                     }
                     return Success();
                 }
-                //请求开门 = 0,
                 //正常开门 = 1,
                 //密码错误 = 2,
                 //正常关门 = 3,
@@ -242,7 +253,7 @@ namespace CabinetAPI.Controllers
                 //网络断开 = 10, 
                 //请求语音 = 15,
                 //结束语音 = 16,
-                List<int> statusList = new List<int>() { 1, 3, 4, 5, 6, 7, 8, 9, 10 };
+                List<int> statusList = new List<int>() { 4, 5, 6, 7, 8, 9, 10 };
                 if (statusList.Contains(request.OperatorType))
                 {
                     cabinet.Status = request.OperatorType;
@@ -257,15 +268,20 @@ namespace CabinetAPI.Controllers
                     OperationType = request.OperatorType,
                     CreateTime = DateTime.Now,
                     CabinetIP = GetIP(),
-                    EventContent = (request.OperatorType == (int)OperatorTypeEnum.正常开门 || request.OperatorType == (int)OperatorTypeEnum.请求开门) ? JsonConvert.SerializeObject(request) : request.EventContent
+                    EventContent = (request.OperatorType == (int)OperatorTypeEnum.正常开门 || request.OperatorType == (int)OperatorTypeEnum.非工作时间开门) ? JsonConvert.SerializeObject(request) : request.EventContent
                 };
                 CabinetLog.Add(log);
                 lock (logLock)
                     CabinetLogQueue.Add(log);
 
-                if (request.OperatorType == (int)OperatorTypeEnum.请求开门)
+
+                if ((request.OperatorType == (int)OperatorTypeEnum.正常开门 || request.OperatorType == (int)OperatorTypeEnum.非工作时间开门) && (cabinet.NeedConfirm ?? false))
                 {
-                    return Failure("等待审核");
+                    return Success("等待审核");
+                }
+                if (request.OperatorType == (int)OperatorTypeEnum.请求语音)
+                {
+                    return Success("等待接受");
                 }
                 return Success();
             }
@@ -299,9 +315,8 @@ namespace CabinetAPI.Controllers
             if (extenssion.StartsWith(@"""") && extenssion.EndsWith(@""""))
                 extenssion = extenssion.Substring(1, extenssion.Length - 2);
             extenssion = Path.GetExtension(extenssion);
-            string filePath = Mac + "_" + Guid.NewGuid().ToString() + "." + extenssion;
+            return Mac + "_" + Guid.NewGuid().ToString() + extenssion;
 
-            return Path.GetFileName(filePath);
         }
 
     }
