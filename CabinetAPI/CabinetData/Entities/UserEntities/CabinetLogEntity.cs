@@ -19,7 +19,16 @@ namespace CabinetData.Entities
             var sql = "select * from CabinetLog  where CabinetID=@ID";
             using (var cn = Database.GetDbConnection())
             {
-                return cn.Query<CabinetLog>(sql).ToList();
+                return cn.Query<CabinetLog>(sql,new { ID =cabinetID}).ToList();
+            }
+        }
+
+        public static CabinetLog GetOpenLog(int cabinetID)
+        {
+            var sql = "select  top 1 * from CabinetLog  where CabinetID=@ID and OperationType in(1,4) order by id desc";
+            using (var cn = Database.GetDbConnection())
+            {
+                return cn.Query<CabinetLog>(sql, new { ID = cabinetID }).FirstOrDefault();
             }
         }
 
@@ -142,6 +151,19 @@ namespace CabinetData.Entities
                 if (list.Count == 0)
                     return new List<DepartmentAlarmTypeStatistics>();
                 return cn.Query<DepartmentAlarmTypeStatistics>("select OperationType,count(1) as Count from Cabinetlog where DepartmentID in @ID and createtime between @Start and @End and OperationType in(2,4,5,6,7,8,9,10) group by OperationType", new { ID = list.Select(m => m.ID).ToList(), Start = from, End = to }).ToList();
+            }
+        }
+
+
+        public static List<CabinetLog> GetAllFromStart(int startID)
+        {
+            var sql = "select top 1000 * from CabinetLog  where ID>@ID";
+            using (var cn = Database.GetDbConnection())
+            {
+                return cn.Query<CabinetLog>(sql,new
+                {
+                    ID = startID
+                }).ToList();
             }
         }
     }

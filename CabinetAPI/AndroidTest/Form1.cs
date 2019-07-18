@@ -38,8 +38,8 @@ namespace AndroidTest
         private string mac = "";
         private void Form1_Load(object sender, EventArgs e)
         {
-            textBox1.Text = server = "47.98.230.218:8080";
-            textBox2.Text = mac = "你的mac地址，可以模拟一个";
+            textBox1.Text = server = "127.0.0.1:30006";
+            textBox2.Text = mac = "213000";
 
         }
         private string Command(CommandRequest cmd)
@@ -87,6 +87,11 @@ namespace AndroidTest
                 OperatorType = int.Parse(no),
                 Method = 0,
             };
+            if (cmd.OperatorType == 1)
+            {
+                cmd.Mac = "213000";
+                cmd.Method = 1;
+            }
             string result = Command(cmd);
             richTextBox1.AppendText(no + ":" + result + Environment.NewLine);
         }

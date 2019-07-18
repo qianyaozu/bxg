@@ -1,6 +1,8 @@
 ﻿using CabinetAPI.Models;
 using CabinetData.Entities;
 using CabinetData.Entities.Principal;
+using CabinetService.Model;
+using CabinetUtility.Encryption;
 using Newtonsoft.Json;
 using NLog;
 using System;
@@ -18,6 +20,7 @@ namespace CabinetAPI.Controllers
     public class AndroidController : BaseController
     {
         private Logger _logger = LogManager.GetLogger("消息队列");
+        private Logger _loggerError = LogManager.GetLogger("error");
         /// <summary>
         /// 心跳集合
         /// </summary>
@@ -28,6 +31,12 @@ namespace CabinetAPI.Controllers
         public static ConcurrentDictionary<int, int> CommandDictionary = new ConcurrentDictionary<int, int>();
         public static List<CabinetLog> CabinetLogQueue = new List<CabinetLog>();
         public static object logLock = new object();
+        public static int msgID = 0;
+        static AndroidController()
+        {
+            System.DateTime startTime = TimeZone.CurrentTimeZone.ToLocalTime(new System.DateTime(1970, 1, 1)); // 当地时区
+            msgID = (int)(DateTime.Now - startTime).TotalSeconds; // 相差毫秒数
+        }
 
         /// <summary>
         /// 对时接口
@@ -87,7 +96,15 @@ namespace CabinetAPI.Controllers
                 Request.Content.ReadAsMultipartAsync(provider);
                 if (provider == null || provider.FileData.Count == 0)
                     return Failure("上传失败");
-                return Success(provider.FileData[0].LocalFileName);
+                FileInfo info = new FileInfo(provider.FileData[0].LocalFileName);
+                if (info.Exists)
+                {
+                    return Success(info.Name);
+                }
+                else
+                {
+                    return Success("");
+                }
             }
             catch (Exception ex)
             {
@@ -155,6 +172,7 @@ namespace CabinetAPI.Controllers
         /// 网络断开 = 10, 
         /// 请求语音 = 15,
         /// 结束语音 = 16,
+        /// 申请维修 = 22
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -178,9 +196,12 @@ namespace CabinetAPI.Controllers
                     {
                         if (string.IsNullOrEmpty(request.Password))
                         {
+                            _loggerError.Error("密码不得为空");
                             return Failure("密码不得为空");
                         }
-                        if (cabinet.FirstContactPassword != request.Password && cabinet.SecondContactPassword != request.Password)
+                        var first = string.IsNullOrEmpty(cabinet.FirstContactPassword) ? "" : AESAlgorithm.Decrypto(cabinet.FirstContactPassword);
+                        var second = string.IsNullOrEmpty(cabinet.SecondContactPassword) ? "" : AESAlgorithm.Decrypto(cabinet.SecondContactPassword);
+                        if (first != request.Password && second != request.Password)
                         {
                             CabinetLog.Add(new CabinetLog
                             {
@@ -193,11 +214,17 @@ namespace CabinetAPI.Controllers
                                 CabinetIP = GetIP(),
                                 EventContent = "密码错误"
                             });
+                            _loggerError.Error("密码错误 " + request.Password + "  [" + cabinet.FirstContactPassword + ":" + first + "]  [" + cabinet.SecondContactPassword + ":" + second + "]");
                             return Failure("密码错误");
                         }
+                    }else
+                    {
+                        if (!(cabinet.NeedConfirm ?? true))
+                        {
+                            //不需要验证
+                            //return Success("允许开门");
+                        }
                     }
-                    if (DateTime.Now.Hour < 9 || DateTime.Now.Hour > 17 || DateTime.Now.DayOfWeek == DayOfWeek.Sunday || DateTime.Now.DayOfWeek == DayOfWeek.Saturday)
-                        request.OperatorType = (int)OperatorTypeEnum.非工作时间开门;
                 }
                 else if (request.OperatorType == (int)OperatorTypeEnum.正常关门)
                 {
@@ -205,9 +232,33 @@ namespace CabinetAPI.Controllers
                     {
                         request.OperatorType = (int)OperatorTypeEnum.非工作时间关门;
                     }
+                    //cabinet.Status = request.OperatorType;
+                    //Cabinet.Update(cabinet);
                 }
                 else if (request.OperatorType == (int)OperatorTypeEnum.心跳)
                 {
+
+                    //if (cabinet.IsOnline ?? false)
+                    //{
+                    //    var log1 = new CabinetData.Entities.CabinetLog
+                    //    {
+                    //        CabinetID = cabinet.ID,
+                    //        DepartmentID = cabinet.DepartmentID,
+                    //        OperatorName = "",
+                    //        OperateTime = DateTime.Now,
+                    //        OperationType = (int)OperatorTypeEnum.上线,
+                    //        CreateTime = DateTime.Now,
+                    //        CabinetIP = "",
+                    //        EventContent = ""
+                    //    };
+                    //    CabinetLog.Add(log1);
+                    //    cabinet.IsOnline = true;
+                    //    Cabinet.Update(cabinet);
+                    //    lock (AndroidController.logLock)
+                    //        AndroidController.CabinetLogQueue.Add(log1);
+                    //}
+
+
                     if (HeartDictionary.ContainsKey(cabinet.ID))
                     {
                         HeartDictionary[cabinet.ID] = DateTime.Now;
@@ -223,10 +274,40 @@ namespace CabinetAPI.Controllers
                         {
                             if (type == (int)OperatorTypeEnum.允许开门)
                             {
+                                if (DateTime.Now.Hour < 9 || DateTime.Now.Hour > 17 || DateTime.Now.DayOfWeek == DayOfWeek.Sunday || DateTime.Now.DayOfWeek == DayOfWeek.Saturday)
+                                    request.OperatorType = (int)OperatorTypeEnum.非工作时间开门;
+                                else
+                                    request.OperatorType = (int)OperatorTypeEnum.正常开门;
+                                cabinet.Status = request.OperatorType;
+                                Cabinet.Update(cabinet);
+                                var log1 = new CabinetLog
+                                {
+                                    CabinetID = cabinet.ID,
+                                    DepartmentID = cabinet.DepartmentID,
+                                    OperatorName = request.UserName,
+                                    OperateTime = DateTime.Now,
+                                    OperationType = (int)OperatorTypeEnum.允许开门,
+                                    CreateTime = DateTime.Now,
+                                    CabinetIP = GetIP(),
+                                    EventContent = ""
+                                };
+                                CabinetLog.Add(log1);
                                 return Success("允许开门");
                             }
                             else if (type == (int)OperatorTypeEnum.拒绝开门)
                             {
+                                var log1 = new CabinetLog
+                                {
+                                    CabinetID = cabinet.ID,
+                                    DepartmentID = cabinet.DepartmentID,
+                                    OperatorName = request.UserName,
+                                    OperateTime = DateTime.Now,
+                                    OperationType = (int)OperatorTypeEnum.拒绝开门,
+                                    CreateTime = DateTime.Now,
+                                    CabinetIP = GetIP(),
+                                    EventContent = ""
+                                };
+                                CabinetLog.Add(log1);
                                 return Success("拒绝开门");
                             }
                             else if (type == (int)OperatorTypeEnum.拒绝语音)
@@ -253,7 +334,8 @@ namespace CabinetAPI.Controllers
                 //网络断开 = 10, 
                 //请求语音 = 15,
                 //结束语音 = 16,
-                List<int> statusList = new List<int>() { 4, 5, 6, 7, 8, 9, 10 };
+                //申请维修 = 22
+                List<int> statusList = new List<int>() { 3, 4, 5, 6, 7, 8, 9, 10 };
                 if (statusList.Contains(request.OperatorType))
                 {
                     cabinet.Status = request.OperatorType;
@@ -271,17 +353,66 @@ namespace CabinetAPI.Controllers
                     EventContent = (request.OperatorType == (int)OperatorTypeEnum.正常开门 || request.OperatorType == (int)OperatorTypeEnum.非工作时间开门) ? JsonConvert.SerializeObject(request) : request.EventContent
                 };
                 CabinetLog.Add(log);
-                lock (logLock)
-                    CabinetLogQueue.Add(log);
-
-
-                if ((request.OperatorType == (int)OperatorTypeEnum.正常开门 || request.OperatorType == (int)OperatorTypeEnum.非工作时间开门) && (cabinet.NeedConfirm ?? false))
+                if ((request.OperatorType == (int)OperatorTypeEnum.正常开门 || request.OperatorType == (int)OperatorTypeEnum.非工作时间开门))
                 {
-                    return Success("等待审核");
+                    if (!(cabinet.NeedConfirm ?? true))
+                    {
+                        //不要验证
+                        if (CommandDictionary.ContainsKey(cabinet.ID))
+                        {
+                            CommandDictionary[cabinet.ID] = (int)OperatorTypeEnum.允许开门;
+                        }
+                        else
+                        {
+                            CommandDictionary.TryAdd(cabinet.ID, (int)OperatorTypeEnum.允许开门);
+                        }
+                        if (DateTime.Now.Hour < 9 || DateTime.Now.Hour > 17 || DateTime.Now.DayOfWeek == DayOfWeek.Sunday || DateTime.Now.DayOfWeek == DayOfWeek.Saturday)
+                            request.OperatorType = (int)OperatorTypeEnum.非工作时间开门;
+                        else
+                            request.OperatorType = (int)OperatorTypeEnum.正常开门;
+                        cabinet.Status = request.OperatorType;
+                        Cabinet.Update(cabinet);
+                        var log1 = new CabinetLog
+                        {
+                            CabinetID = cabinet.ID,
+                            DepartmentID = cabinet.DepartmentID,
+                            OperatorName = request.UserName,
+                            OperateTime = DateTime.Now,
+                            OperationType = (int)OperatorTypeEnum.允许开门,
+                            CreateTime = DateTime.Now,
+                            CabinetIP = GetIP(),
+                            EventContent = ""
+                        };
+                        CabinetLog.Add(log1);
+
+                        return Success();
+                    }
+                    else
+                    {
+                        lock (logLock)
+                        {
+                            msgID++;
+                            log.ID = msgID;
+                            CabinetLogQueue.Add(log);
+                        }
+                        return Success("等待审核");
+                    }
                 }
                 if (request.OperatorType == (int)OperatorTypeEnum.请求语音)
                 {
+                    lock (logLock)
+                    {
+                        msgID++;
+                        log.ID = msgID;
+                        CabinetLogQueue.Add(log);
+                    }
                     return Success("等待接受");
+                }
+                lock (logLock)
+                {
+                    msgID++;
+                    log.ID = msgID;
+                    CabinetLogQueue.Add(log);
                 }
                 return Success();
             }
@@ -289,6 +420,65 @@ namespace CabinetAPI.Controllers
             {
                 logger.Error(ex);
                 return Failure("上报失败");
+            }
+        }
+
+
+
+        [HttpGet, Route("api/getall")]
+        public IHttpActionResult GetAll()
+        {
+            try
+            {
+                var cabinetList = Cabinet.GetAll().FindAll(m => (m.Status == 1 || m.Status == 4));
+                foreach (var m in cabinetList)
+                {
+                    var log = CabinetLog.GetOpenLog(m.ID);
+                    if (log == null || log.CreateTime.AddSeconds(60) < DateTime.Now)
+                    {
+                        m.Status = 3;
+                        Cabinet.Update(m);
+                        _logger.Info("自动重置关闭");
+                    }
+                }
+                var list = Cabinet.GetAll();
+                var model = list.Select(m => new BxgModel
+                {
+                    Name = m.Name,
+                    Mac = m.AndroidMac,
+                    IP = m.IP,
+                    IsOnline = m.IsOnline ?? false,
+                    LastOnlineTime = (m.LastOnlineTime == null) ? "" : m.LastOnlineTime?.ToString("yyyy-MM-dd HH:mm:ss"),
+                    //正常开门 = 1, 
+                    //正常关门 = 3,
+                    //非工作时间开门 = 4,
+                    //非工作时间关门 = 5,
+                    //外部电源断开 = 6,
+                    //备份电源电压低 = 7,
+                    //未按规定关门 = 8,
+                    //强烈震动 = 9,
+                    //网络断开 = 10, 
+                    Status = (m.Status == 1 || m.Status == 4) ? 1 : 0,
+                    StatusDes = (m.Status == null ? "" : Enum.GetName(typeof(OperatorTypeEnum), m.Status)),
+                }).ToList();
+                var item= new ResultModel()
+                {
+                    Success = 1,
+                    Message = "",
+                    Data = model
+                };
+                return Json<ResultModel>(item);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+                var item = new ResultModel()
+                {
+                    Success = 0,
+                    Message = "获取数据失败",
+                    Data = null
+                };
+                return Json<ResultModel>(item); 
             }
         }
     }
@@ -310,13 +500,12 @@ namespace CabinetAPI.Controllers
 
         public override string GetLocalFileName(HttpContentHeaders headers)
         {
-            var extenssion = headers.ContentDisposition.FileName;
+            //var extenssion = headers.ContentDisposition.FileName;
 
-            if (extenssion.StartsWith(@"""") && extenssion.EndsWith(@""""))
-                extenssion = extenssion.Substring(1, extenssion.Length - 2);
-            extenssion = Path.GetExtension(extenssion);
-            return Mac + "_" + Guid.NewGuid().ToString() + extenssion;
-
+            //if (extenssion.StartsWith(@"""") && extenssion.EndsWith(@""""))
+            //    extenssion = extenssion.Substring(1, extenssion.Length - 2);
+            //extenssion = Path.GetExtension(extenssion);
+            return Mac + "_" + Guid.NewGuid().ToString() + ".png";
         }
 
     }

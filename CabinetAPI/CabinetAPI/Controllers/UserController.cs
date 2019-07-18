@@ -31,12 +31,14 @@ namespace CabinetAPI.Controllers
     [TokenFilter]
     public class UserController : BaseController
     {
+
+        private Logger _logger = LogManager.GetLogger("UserController");
         /// <summary>
         /// 连续密码错误
         /// </summary>
         private static List<LoginModel> ContinueErrorPassword = new List<LoginModel>();
-      
 
+        public static Dictionary<string, UserInfo> LoginDictionary = new Dictionary<string, UserInfo>();
         /// <summary>
         /// 登录
         /// </summary>
@@ -81,7 +83,7 @@ namespace CabinetAPI.Controllers
                     }
                     return Failure("密码错误");
                 }
-                var token = Guid.NewGuid().ToString();
+                var token = user.ID.ToString();
 
 
                
@@ -111,12 +113,15 @@ namespace CabinetAPI.Controllers
                 };
 
                 WriteCookie("token", token);
-                CacheHelper.SetCache(token, user); //2小时缓存
-               
+                user.LastLoginTime = DateTime.Now;
+                if (!LoginDictionary.ContainsKey(token))
+                    LoginDictionary.Add(token, user);
+
+                _logger.Info(  string.Join(",", LoginDictionary.Keys.ToList()));
                 return Success(data);//返回用户权限
             }catch(Exception e)
             {
-                logger.Error(e);
+                _logger.Error(e);
                 return Failure(e.Message);
             }
             
@@ -130,9 +135,15 @@ namespace CabinetAPI.Controllers
         [HttpPost, Route("api/user/logout")]
         public IHttpActionResult Logout(LoginModel model)
         {
-            UserInfo user= CacheHelper.GetCache(GetCookie("token") ) as UserInfo;
-            if (user==null)
+            if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
             {
+                WriteCookie("token", "", -1);
+                return Logout();
+            }
+            UserInfo user = UserController.LoginDictionary[GetCookie("token")];
+            if (user == null)
+            {
+                WriteCookie("token", "", -1);
                 return Logout();
             }
             SystemLog.Add(new SystemLog
@@ -147,8 +158,7 @@ namespace CabinetAPI.Controllers
                 UserName = user.Name,
                 RealName = user.RealName
             });
-            CacheHelper.SetCache(GetCookie("token"), null, new TimeSpan(0, 0, 1));
-           
+            LoginDictionary.Remove(GetCookie("token"));
             WriteCookie("token", "", -1);
             return Success(true);
         }
@@ -186,7 +196,9 @@ namespace CabinetAPI.Controllers
                     return Failure("密码必须字母开头");
                 }
 
-                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
+                    return Logout();
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
                 if (userCookie == null)
                 {
                     return Logout();
@@ -279,7 +291,9 @@ namespace CabinetAPI.Controllers
                     return Failure("密码必须字母开头");
                 }
 
-                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
+                    return Logout();
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
                 if (userCookie == null)
                 {
                     return Logout();
@@ -340,7 +354,9 @@ namespace CabinetAPI.Controllers
             }
             try
             {
-                UserInfo user = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
+                    return Logout();
+                UserInfo user = UserController.LoginDictionary[GetCookie("token")];
                 if (user == null)
                 {
                     return Logout();
@@ -440,7 +456,9 @@ namespace CabinetAPI.Controllers
 
             try
             {
-                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
+                    return Logout();
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
                 if (userCookie == null)
                 {
                     return Logout();
@@ -483,7 +501,9 @@ namespace CabinetAPI.Controllers
                     search.PageIndex = 1;
                 if (search.PageSize == 0)
                     search.PageSize = 20;
-                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
+                    return Logout();
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
                 if (userCookie == null)
                 {
                     return Logout();

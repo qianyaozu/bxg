@@ -8,7 +8,11 @@ using Newtonsoft.Json;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Web;
 using System.Web.Http;
 
@@ -20,6 +24,7 @@ namespace CabinetAPI.Controllers
     [TokenFilter]
     public class CabinetLogController : BaseController
     {
+        private Logger _logger = LogManager.GetCurrentClassLogger();
         /// <summary>
         /// 分页查询保险柜日志
         /// </summary>
@@ -37,33 +42,48 @@ namespace CabinetAPI.Controllers
                     search.PageIndex = 1;
                 if (search.PageSize == 0)
                     search.PageSize = 20;
-                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
+                    return Logout();
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
                 if (userCookie == null)
                 {
                     return Logout();
                 }
                 List<Department> departList = new List<Department>();
-                if((search.DepartmentID??0)!=0)
-                   departList= Department.GetAllChildren(search.DepartmentID.Value);
+                if ((search.DepartmentID ?? 0) != 0)
+                    departList = Department.GetAllChildren(search.DepartmentID.Value);
                 else
                     departList = Department.GetAllChildren(userCookie.DepartmentID);
-                var result = CabinetLog.GetCabinets(search, departList.Select(m=>m.ID).ToList());
+                var result = CabinetLog.GetCabinets(search, departList.Select(m => m.ID).ToList());
                 if (result.Items.Count > 0)
                 {
                     var cabinet = Cabinet.GetCabinetByIds(result.Items.Select(m => m.CabinetID).ToList());
                     var depart = Department.GetAll(result.Items.Select(m => m.DepartmentID ?? 0).ToList());
                     result.Items.ForEach(m =>
                     {
-                        m.CabinetName= cabinet.Find(n => n.ID == m.CabinetID)?.Name;
+                        m.OperationType = ((m.OperationType == 1 || m.OperationType == 4) ? (int)OperatorTypeEnum.申请开门 : m.OperationType);
+                        m.CabinetName = cabinet.Find(n => n.ID == m.CabinetID)?.Name;
                         m.DepartmentName = depart.Find(n => n.ID == m.DepartmentID)?.Name;
                         m.CabinetCode = cabinet.Find(n => n.ID == m.CabinetID)?.Code;
+                        if (!string.IsNullOrEmpty(m.EventContent)&& m.EventContent.ToLower().Contains("photos"))
+                        {
+                            //有事件
+                            CommandRequest req = JsonConvert.DeserializeObject<CommandRequest>(m.EventContent);
+                            if (req != null && req.Photos != null && req.Photos.Count > 0)
+                            {
+                                for (int i = 0; i < req.Photos.Count; i++)
+                                {
+                                    req.Photos[i] = ImgToBase64String(req.Photos[i]);
+                                }
+                            }
+                        }
                     });
                 }
                 return Success(result);
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                _logger.Error(ex);
                 return Failure("查询失败");
             }
         }
@@ -81,7 +101,7 @@ namespace CabinetAPI.Controllers
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                _logger.Error(ex);
                 return Failure("查询失败");
             }
         }
@@ -100,45 +120,75 @@ namespace CabinetAPI.Controllers
             }
             try
             {
-                var cookie = GetCookie("token");
-                var cache = CacheHelper.GetCache(cookie);
-                if (cache == null)
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
                     return Logout();
-                UserInfo userCookie = cache as UserInfo;
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")] ;
                 if (userCookie == null)
                     return Logout();
                 List<CommandModel> cmdList = new List<CommandModel>();
+                
+               
                 if (AndroidController.CabinetLogQueue.Count == 0)
                     return Success(new
                     {
                         list = cmdList,
-                        time = ConvertDateTimeToString(DateTime.Now)
+                        time = time,
+                        msg="queue is empty"
                     });
-                DateTime lastTime = ConvertStringToDateTime(time);
-                var list = new List<CabinetLog>();
-
-                var departList = Department.GetChildren(userCookie.DepartmentID).Select(m => m.ID).ToList();
-                departList.Add(userCookie.DepartmentID);
-                lock (AndroidController.logLock)
+                else
                 {
-                    list = AndroidController.CabinetLogQueue.ToList().FindAll(m => departList.Contains(m.DepartmentID ?? 0));
-                    if (list.Count > 0)
+                    if (time == "0")
                     {
-                        foreach (var item in list)
+                        return Success(new
                         {
-                            AndroidController.CabinetLogQueue.Remove(item);
-                        }
+                            list = cmdList,
+                            time = AndroidController.CabinetLogQueue.Select(m => m.ID).Max().ToString(),
+                            msg = "first commit"
+                        });
                     }
                 }
+                _logger.Warn("enter" + AndroidController.CabinetLogQueue.Count);
+                int lastID = 0;
+                if (!string.IsNullOrEmpty(time))
+                {
+                    try
+                    {
+                        lastID = Convert.ToInt32(time);
+                    }
+                    catch
+                    {
+                        lastID = 0;
+                    }
+                }
+                var list = new List<CabinetLog>();
 
+                //var departList = Department.GetChildren(userCookie.DepartmentID).Select(m => m.ID).ToList();
+                //departList.Add(userCookie.DepartmentID);
                 //lock (AndroidController.logLock)
-                //    list = AndroidController.CabinetLogQueue.ToList().FindAll(m => m.CreateTime > lastTime && departList.Contains(m.DepartmentID ?? 0));
-                logger.Info(time + "   " + lastTime.ToString("yyyy-MM-dd HH:mm:ss") + " "   + AndroidController.CabinetLogQueue.Count + "/" + list.Count);
+                //{
+                //    list = AndroidController.CabinetLogQueue.ToList().FindAll(m => departList.Contains(m.DepartmentID ?? 0));
+                //    if (list.Count > 0)
+                //    {
+                //        foreach (var item in list)
+                //        {
+                //            AndroidController.CabinetLogQueue.Remove(item);
+                //        }
+                //    }
+                //}
+
+                lock (AndroidController.logLock)
+                {
+                    
+                        list = AndroidController.CabinetLogQueue.ToList().FindAll(m => m.ID > lastID);
+                    _logger.Info(lastID + "->符合数量" + list.Count);
+                    
+                }
+                _logger.Trace( lastID + "->" + string.Join(",", AndroidController.CabinetLogQueue.Select(n => n.ID)) + "->符合数量" + list.Count);
                 if (list.Count == 0)
                     return Success(new
                     {
                         list = cmdList,
-                        time = ConvertDateTimeToString(DateTime.Now)
+                        time = time
                     });
 
                 var allDepartList = Department.GetDepartmentByIds(list.Select(m => m.DepartmentID ?? 0).ToList());
@@ -157,7 +207,7 @@ namespace CabinetAPI.Controllers
                     cmd.EventContent = m.EventContent;
                     cmd.WindowType = 0;
                     bool needConfirm = item.NeedConfirm ?? false;//是否需要开门审核
-                    if (m.OperationType == 2 || (m.OperationType == 4 && !needConfirm) || m.OperationType == 5 || m.OperationType == 6 || m.OperationType == 7 || m.OperationType == 8 || m.OperationType == 9 || m.OperationType == 10|| m.OperationType == 14)
+                    if (m.OperationType == 2 || (m.OperationType == 4 && !needConfirm) || m.OperationType == 5 || m.OperationType == 6 || m.OperationType == 7 || m.OperationType == 8 || m.OperationType == 9 || m.OperationType == 10 || m.OperationType == 14)
                         cmd.WindowType = 1;
                     if (m.OperationType == 15 || ((m.OperationType == 1 || m.OperationType == 4) && needConfirm))
                         cmd.WindowType = 2;
@@ -166,13 +216,13 @@ namespace CabinetAPI.Controllers
                 var data = new
                 {
                     list = cmdList,
-                    time = ConvertDateTimeToString(list.Select(m => m.CreateTime).Max())
+                    time = list.Select(m => m.ID).Max().ToString()
                 };
                 return Success(data);
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                _logger.Error(ex);
                 return Failure("通讯异常");
             }
         }
@@ -204,13 +254,12 @@ namespace CabinetAPI.Controllers
                 return BadRequest();
             try
             {
-                var cache = CacheHelper.GetCache(GetCookie("token"));
-                if (cache == null)
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
                     return Logout();
-                UserInfo userCookie = cache as UserInfo;
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
                 if (userCookie == null)
                     return Logout();
-                logger.Warn(JsonConvert.SerializeObject(cmd));
+                _logger.Warn(JsonConvert.SerializeObject(cmd));
                 if (cmd.OperationType == (int)OperatorTypeEnum.允许开门 || cmd.OperationType == (int)OperatorTypeEnum.拒绝开门|| cmd.OperationType == (int)OperatorTypeEnum.接受语音 || cmd.OperationType == (int)OperatorTypeEnum.拒绝语音)
                 {
                     if (AndroidController.CommandDictionary.ContainsKey(cmd.CabinetID))
@@ -228,11 +277,20 @@ namespace CabinetAPI.Controllers
                 log.CreateTime = DateTime.Now;
                 log.Remark = cmd.Remark;
                 CabinetLog.Add(log);
+                if (cmd.OperationType == (int)OperatorTypeEnum.解除报警)
+                {
+                    var cab = Cabinet.GetOne(cmd.CabinetID);
+                    if (cab != null)
+                    {
+                        cab.Status = 3;
+                        Cabinet.Update(cab);
+                    }
+                }
                 return Success();
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                _logger.Error(ex);
                 return Failure("提交失败");
             }
         }
@@ -249,10 +307,9 @@ namespace CabinetAPI.Controllers
                 return BadRequest();
             try
             {
-                var cache = CacheHelper.GetCache(GetCookie("token"));
-                if (cache == null)
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
                     return Logout();
-                UserInfo userCookie = cache as UserInfo;
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
                 if (userCookie == null)
                     return Logout();
                 if (query.DepartmentID == 0)
@@ -264,7 +321,7 @@ namespace CabinetAPI.Controllers
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                _logger.Error(ex);
                 return Failure("提交失败");
             }
         }
@@ -284,10 +341,9 @@ namespace CabinetAPI.Controllers
                 return BadRequest();
             try
             {
-                var cache = CacheHelper.GetCache(GetCookie("token"));
-                if (cache == null)
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
                     return Logout();
-                UserInfo userCookie = cache as UserInfo;
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
                 if (userCookie == null)
                     return Logout();
                 if (query.DepartmentID == 0)
@@ -312,7 +368,7 @@ namespace CabinetAPI.Controllers
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                _logger.Error(ex);
                 return Failure("查询失败");
             }
         }
@@ -329,10 +385,9 @@ namespace CabinetAPI.Controllers
                 return BadRequest();
             try
             {
-                var cache = CacheHelper.GetCache(GetCookie("token"));
-                if (cache == null)
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
                     return Logout();
-                UserInfo userCookie = cache as UserInfo;
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
                 if (userCookie == null)
                     return Logout();
                 if (query.DepartmentID == 0)
@@ -345,10 +400,34 @@ namespace CabinetAPI.Controllers
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                _logger.Error(ex);
                 return Failure("提交失败");
             }
         }
+
+
+
+
+        private string ImgToBase64String(string Imagefilename)
+        {
+            try
+            {
+                var path = AppDomain.CurrentDomain.BaseDirectory + "upload\\"+  Imagefilename; 
+                FileStream fsForRead = new FileStream(path, FileMode.Open); 
+                fsForRead.Seek(0, SeekOrigin.Begin);
+                byte[] bs = new byte[fsForRead.Length];
+                int log = Convert.ToInt32(fsForRead.Length); 
+                fsForRead.Read(bs, 0, log);
+                fsForRead.Close();
+                return "data:image/png;base64,"+Convert.ToBase64String(bs); 
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+         
     }
 
 

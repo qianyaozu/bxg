@@ -18,7 +18,7 @@ namespace CabinetAPI.Controllers
             logger = LogManager.GetCurrentClassLogger();
         }
         #region Action返回结果通用方法
-        [HiddenApi]
+        //[HiddenApi]
         /// <summary>
         /// 返回成功数据
         /// </summary>
@@ -33,7 +33,7 @@ namespace CabinetAPI.Controllers
             };
             return Json<dynamic>(result);
         }
-        [HiddenApi]
+        //[HiddenApi]
         /// <summary>
         /// 返回失败数据
         /// </summary>
@@ -56,6 +56,7 @@ namespace CabinetAPI.Controllers
             var result = new
             {
                 State = 2,
+                Message = "Logout"
             };
             return Json<dynamic>(result);
         }
@@ -78,6 +79,10 @@ namespace CabinetAPI.Controllers
 
         public string GetCookie(string strName)
         {
+            if (TokenFilterAttribute.Anonymous&&strName=="token")
+            {
+                return "admin";
+            }
             if (HttpContext.Current.Request.Cookies != null && HttpContext.Current.Request.Cookies[strName] != null)
             {
                 return HttpContext.Current.Request.Cookies[strName].Value.ToString();

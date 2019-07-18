@@ -4,6 +4,8 @@ using CabinetData.Base;
 using CabinetData.Entities.QueryEntities;
 using DapperExtensions;
 using System.Collections.Generic;
+using Dapper;
+using System.Linq;
 
 namespace CabinetData.Entities
 {
@@ -45,7 +47,15 @@ namespace CabinetData.Entities
             }
         }
 
+        public static List<SystemLog> GetAll(int id) {
 
-        
+            using (var cn = Database.GetDbConnection())
+            {
+                return cn.Query<SystemLog>("select top 100 * from SystemLog where ID >@ID order by ID", new { ID = id }).ToList<SystemLog>();
+            }
+        }
+
+
+
     }
 }

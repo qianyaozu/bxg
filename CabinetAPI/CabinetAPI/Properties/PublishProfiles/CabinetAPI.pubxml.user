@@ -10,19 +10,97 @@
   </PropertyGroup>
   <ItemGroup>
     <File Include="bin/CabinetAPI.dll">
-      <publishTime>06/15/2018 15:35:38</publishTime>
+      <publishTime>06/29/2019 13:16:21</publishTime>
     </File>
     <File Include="bin/CabinetData.dll">
-      <publishTime>06/14/2018 19:30:18</publishTime>
+      <publishTime>04/18/2019 20:14:22</publishTime>
+    </File>
+    <File Include="bin/CabinetService.exe">
+      <publishTime>04/18/2019 20:14:22</publishTime>
     </File>
     <File Include="bin/CabinetUtility.dll">
-      <publishTime>06/14/2018 19:30:18</publishTime>
+      <publishTime>04/18/2019 20:14:22</publishTime>
     </File>
     <File Include="bin/Dapper.dll">
       <publishTime>11/25/2017 18:18:42</publishTime>
     </File>
     <File Include="bin/DapperExtensions.dll">
       <publishTime>08/08/2017 22:38:30</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AspNetCore.Authorization.dll">
+      <publishTime>06/22/2016 09:14:50</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AspNetCore.Hosting.Abstractions.dll">
+      <publishTime>06/22/2016 09:14:52</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AspNetCore.Hosting.Server.Abstractions.dll">
+      <publishTime>06/22/2016 09:14:52</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AspNetCore.Http.Abstractions.dll">
+      <publishTime>06/22/2016 09:14:52</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AspNetCore.Http.dll">
+      <publishTime>06/22/2016 09:14:52</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AspNetCore.Http.Extensions.dll">
+      <publishTime>06/22/2016 09:14:52</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AspNetCore.Http.Features.dll">
+      <publishTime>06/22/2016 09:14:52</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AspNetCore.JsonPatch.dll">
+      <publishTime>06/22/2016 09:14:52</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AspNetCore.Mvc.Abstractions.dll">
+      <publishTime>06/22/2016 09:14:52</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AspNetCore.Mvc.Core.dll">
+      <publishTime>06/22/2016 09:14:52</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AspNetCore.Mvc.Formatters.Json.dll">
+      <publishTime>06/22/2016 09:14:54</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AspNetCore.Routing.Abstractions.dll">
+      <publishTime>06/22/2016 09:14:54</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AspNetCore.Routing.dll">
+      <publishTime>06/22/2016 09:14:54</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AspNetCore.WebUtilities.dll">
+      <publishTime>06/22/2016 09:14:54</publishTime>
+    </File>
+    <File Include="bin/Microsoft.DotNet.InternalAbstractions.dll">
+      <publishTime>06/21/2016 21:04:54</publishTime>
+    </File>
+    <File Include="bin/Microsoft.Extensions.Configuration.Abstractions.dll">
+      <publishTime>06/22/2016 09:14:56</publishTime>
+    </File>
+    <File Include="bin/Microsoft.Extensions.DependencyInjection.Abstractions.dll">
+      <publishTime>06/22/2016 09:14:56</publishTime>
+    </File>
+    <File Include="bin/Microsoft.Extensions.DependencyModel.dll">
+      <publishTime>06/21/2016 21:04:56</publishTime>
+    </File>
+    <File Include="bin/Microsoft.Extensions.FileProviders.Abstractions.dll">
+      <publishTime>06/22/2016 09:14:56</publishTime>
+    </File>
+    <File Include="bin/Microsoft.Extensions.Logging.Abstractions.dll">
+      <publishTime>06/22/2016 09:14:56</publishTime>
+    </File>
+    <File Include="bin/Microsoft.Extensions.ObjectPool.dll">
+      <publishTime>06/22/2016 09:14:56</publishTime>
+    </File>
+    <File Include="bin/Microsoft.Extensions.Options.dll">
+      <publishTime>06/22/2016 09:14:56</publishTime>
+    </File>
+    <File Include="bin/Microsoft.Extensions.PlatformAbstractions.dll">
+      <publishTime>06/22/2016 09:14:56</publishTime>
+    </File>
+    <File Include="bin/Microsoft.Extensions.Primitives.dll">
+      <publishTime>06/22/2016 09:14:56</publishTime>
+    </File>
+    <File Include="bin/Microsoft.Net.Http.Headers.dll">
+      <publishTime>06/22/2016 09:14:56</publishTime>
     </File>
     <File Include="bin/Microsoft.Web.Infrastructure.dll">
       <publishTime>07/25/2012 11:48:56</publishTime>
@@ -31,7 +109,7 @@
       <publishTime>02/18/2018 09:44:54</publishTime>
     </File>
     <File Include="bin/NLog.config">
-      <publishTime>03/05/2018 10:24:24</publishTime>
+      <publishTime>12/11/2018 13:02:39</publishTime>
     </File>
     <File Include="bin/NLog.dll">
       <publishTime>02/27/2018 23:35:06</publishTime>
@@ -42,8 +120,23 @@
     <File Include="bin/Swashbuckle.Core.dll">
       <publishTime>07/08/2017 01:30:56</publishTime>
     </File>
+    <File Include="bin/System.Buffers.dll">
+      <publishTime>06/11/2016 23:13:14</publishTime>
+    </File>
+    <File Include="bin/System.ComponentModel.Primitives.dll">
+      <publishTime>06/11/2016 23:13:22</publishTime>
+    </File>
+    <File Include="bin/System.ComponentModel.TypeConverter.dll">
+      <publishTime>06/11/2016 23:13:28</publishTime>
+    </File>
+    <File Include="bin/System.Diagnostics.DiagnosticSource.dll">
+      <publishTime>06/11/2016 23:13:28</publishTime>
+    </File>
     <File Include="bin/System.Net.Http.Formatting.dll">
       <publishTime>02/01/2018 12:17:18</publishTime>
+    </File>
+    <File Include="bin/System.Text.Encodings.Web.dll">
+      <publishTime>06/11/2016 23:14:48</publishTime>
     </File>
     <File Include="bin/System.Web.Http.dll">
       <publishTime>02/01/2018 12:17:40</publishTime>
@@ -64,7 +157,7 @@
       <publishTime>03/05/2018 10:24:24</publishTime>
     </File>
     <File Include="packages.config">
-      <publishTime>04/16/2018 14:18:52</publishTime>
+      <publishTime>06/13/2019 22:04:53</publishTime>
     </File>
     <File Include="SwaggerUI/css/screen.css">
       <publishTime>03/09/2018 09:00:08</publishTime>
@@ -112,7 +205,7 @@
       <publishTime>03/09/2018 17:43:11</publishTime>
     </File>
     <File Include="Web.config">
-      <publishTime>04/16/2018 14:44:38</publishTime>
+      <publishTime>06/13/2019 23:56:18</publishTime>
     </File>
   </ItemGroup>
 </Project>

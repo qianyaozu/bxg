@@ -4,6 +4,7 @@ using CabinetData.Entities.Principal;
 using CabinetData.Entities.QueryEntities;
 using CabinetUtility;
 using CabinetUtility.Encryption;
+using Newtonsoft.Json;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,7 @@ namespace CabinetAPI.Controllers
     [TokenFilter]
     public class CabinetController : BaseController
     {
+        private Logger _logger = LogManager.GetLogger("CabinetController");
         /// <summary>
         /// 新增保险柜接口
         /// </summary>
@@ -39,8 +41,9 @@ namespace CabinetAPI.Controllers
                 if (Cabinet.GetByMac(cabinet.AndroidMac) != null)
                     return Failure("该硬件编码已经被使用");
 
-
-                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
+                    return Logout();
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
                 if (userCookie == null)
                 {
                     return Logout();
@@ -68,7 +71,7 @@ namespace CabinetAPI.Controllers
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                _logger.Error(ex);
                 return Failure("新增失败");
             }
         }
@@ -112,7 +115,9 @@ namespace CabinetAPI.Controllers
                 {
                     return Failure(valiate);
                 }
-                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
+                    return Logout();
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
                 if (userCookie == null)
                 {
                     return Logout();
@@ -165,7 +170,7 @@ namespace CabinetAPI.Controllers
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                _logger.Error(ex);
                 return Failure("修改失败");
             }
         }
@@ -181,7 +186,9 @@ namespace CabinetAPI.Controllers
         {
             if (id == 0 || status == -1)
                 return BadRequest();
-            UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+            if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
+                return Logout();
+            UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
             if (userCookie == null)
                 return Logout();
             try
@@ -189,13 +196,17 @@ namespace CabinetAPI.Controllers
                 var cab = Cabinet.GetOne(id);
                 if (cab == null)
                     return Failure("该保险柜不存在");
+                if (status == 1)
+                {
+                    status = 3;
+                }
                 cab.Status = status;
                 Cabinet.Update(cab);
                 return Success();
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                _logger.Error(ex);
                 return Failure("更新失败");
             }
 
@@ -215,7 +226,9 @@ namespace CabinetAPI.Controllers
             }
             try
             {
-                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
+                    return Logout();
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
                 if (userCookie == null)
                 {
                     return Logout();
@@ -238,7 +251,7 @@ namespace CabinetAPI.Controllers
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                _logger.Error(ex);
                 return Failure("删除失败");
             }
         }
@@ -260,11 +273,28 @@ namespace CabinetAPI.Controllers
                     search.PageIndex = 1;
                 if (search.PageSize == 0)
                     search.PageSize = 20;
-                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                _logger.Info(JsonConvert.SerializeObject(UserController.LoginDictionary));
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
+                    return Logout();
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
                 if (userCookie == null)
                 {
                     return Logout();
                 }
+
+                //更新保险柜状态
+                var cabinetList = Cabinet.GetAll().FindAll(m => (m.Status == 1 || m.Status == 4));
+                foreach (var m in cabinetList)
+                {
+                    var log = CabinetLog.GetOpenLog(m.ID);
+                    if (log == null || log.CreateTime.AddSeconds(60) < DateTime.Now)
+                    {
+                        m.Status = 3;
+                        Cabinet.Update(m);
+                        _logger.Info("自动重置关闭");
+                    }
+                }
+
                 List<Department> departList = Department.GetAllChildren(userCookie.DepartmentID);
                 if (!string.IsNullOrEmpty(search.DepartmentName))
                     departList = departList.FindAll(m => m.Name.Contains(search.DepartmentName));
@@ -275,13 +305,15 @@ namespace CabinetAPI.Controllers
                     result.Items.ForEach(m =>
                     {
                         m.DepartmentName = depart.Find(n => n.ID == m.DepartmentID)?.Name;
+                        m.FirstContactPassword = string.IsNullOrEmpty(m.FirstContactPassword) ? "" : AESAlgorithm.Decrypto(m.FirstContactPassword);
+                        m.SecondContactPassword = string.IsNullOrEmpty(m.SecondContactPassword) ? "" : AESAlgorithm.Decrypto(m.SecondContactPassword);
                     });
                 }
                 return Success(result);
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                _logger.Error(ex);
                 return Failure("查询失败");
             }
         }
@@ -296,7 +328,9 @@ namespace CabinetAPI.Controllers
         {
             try
             {
-                UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
+                    return Logout();
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
                 if (userCookie == null)
                 {
                     return Logout();
@@ -316,7 +350,7 @@ namespace CabinetAPI.Controllers
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                _logger.Error(ex);
                 return Failure("查询失败");
             }
         }
@@ -328,7 +362,9 @@ namespace CabinetAPI.Controllers
         [HttpGet, Route("api/cabinet/map")]
         public IHttpActionResult CabinetMap()
         {
-            UserInfo userCookie = CacheHelper.GetCache(GetCookie("token")) as UserInfo;
+            if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
+                return Logout();
+            UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
             if (userCookie == null)
             {
                 return Logout();
@@ -342,7 +378,7 @@ namespace CabinetAPI.Controllers
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                _logger.Error(ex);
                 return Failure(ex.Message);
             }
         }

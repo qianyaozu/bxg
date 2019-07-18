@@ -31,7 +31,10 @@ namespace CabinetData.Entities.Principal
         接受语音 = 18,
         拒绝语音 = 19,
         允许开门 = 20,
-        拒绝开门 = 21
+        拒绝开门 = 21,
+        申请维修 = 22,
+        解除报警 = 23,
+        申请开门=24
     }
 
     /// <summary>
