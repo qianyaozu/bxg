@@ -6,4 +6,6 @@ D:\github.com\bxg\CabinetAPI\CabinetData\bin\Release\Dapper.xml
 D:\github.com\bxg\CabinetAPI\CabinetData\bin\Release\DapperExtensions.pdb
 D:\github.com\bxg\CabinetAPI\CabinetData\obj\Release\CabinetData.dll
 D:\github.com\bxg\CabinetAPI\CabinetData\obj\Release\CabinetData.pdb
-D:\github.com\bxg\CabinetAPI\CabinetData\obj\Release\CabinetData.csprojResolveAssemblyReference.cache
+D:\github.com\bxg\CabinetAPI\CabinetData\obj\Release\CabinetData.csprojAssemblyReference.cache
+D:\github.com\bxg\CabinetAPI\CabinetData\obj\Release\CabinetData.csproj.CoreCompileInputs.cache
+D:\github.com\bxg\CabinetAPI\CabinetData\obj\Release\CabinetData.csproj.CopyComplete

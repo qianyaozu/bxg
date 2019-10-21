@@ -20,16 +20,15 @@ namespace CabinetAPI.Filter
         static TokenFilterAttribute()
         {
             Anonymous = (ConfigurationManager.AppSettings["Anonymous"]?.ToString().ToLower()=="true");
+            if (Anonymous)
+            {
+                if (!UserController.LoginDictionary.ContainsKey("admin"))
+                    UserController.LoginDictionary.Add("admin", UserInfo.GetOne("admin")); 
+            }
         }
         private Logger _logger = LogManager.GetLogger("TokenFilterAttribute");
         public override void OnActionExecuting(HttpActionContext actionContext)
         {
-            if (Anonymous)
-            {
-                if(!UserController.LoginDictionary.ContainsKey("admin"))
-                    UserController.LoginDictionary.Add("admin", UserInfo.GetOne("admin"));
-                return;
-            }
             if (!actionContext.Request.RequestUri.AbsolutePath.ToLower().Equals("/api/user/login"))
             {
                 try

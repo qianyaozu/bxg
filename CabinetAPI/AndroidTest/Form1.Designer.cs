@@ -42,7 +42,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(50, 28);
+            this.label1.Location = new System.Drawing.Point(51, 53);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(23, 12);
             this.label1.TabIndex = 0;
@@ -51,7 +51,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(50, 58);
+            this.label2.Location = new System.Drawing.Point(51, 27);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(41, 12);
             this.label2.TabIndex = 1;
@@ -70,6 +70,7 @@
             this.textBox2.Name = "textBox2";
             this.textBox2.Size = new System.Drawing.Size(283, 21);
             this.textBox2.TabIndex = 3;
+            this.textBox2.Text = "213000";
             // 
             // comboBox1
             // 
@@ -78,13 +79,37 @@
             "正常开门 = 1",
             "密码错误 = 2",
             "正常关门 = 3",
+            "非工作时间开门 = 4",
+            "非工作时间关门 = 5",
             "外部电源断开 = 6",
             "备份电源电压低 = 7",
             "未按规定关门 = 8",
             "强烈震动 = 9",
-            "网络断开 = 10 ",
+            "网络断开 = 10",
+            "修改密码 = 11",
+            "设置参数 = 12",
+            "上线 = 13",
+            "下线 = 14",
             "请求语音 = 15",
-            "结束语音 = 16 "});
+            "结束语音 = 16",
+            "心跳 = 17",
+            "接受语音 = 18",
+            "拒绝语音 = 19",
+            "允许开门 = 20",
+            "拒绝开门 = 21",
+            "申请维修 = 22",
+            "解除报警 = 23",
+            "申请开门 = 24",
+            "倾斜移动报警 = 30",
+            "上传门磁报警 = 31",
+            "终端修改信息 = 32",
+            "允许终端修改信息 = 33",
+            "拒绝终端修改信息 = 34",
+            "应急钥匙开门 = 35",
+            "申请人员注册 = 40",
+            "允许人员注册 = 41",
+            "拒绝人员注册 = 42",
+            "开门验证失败=50"});
             this.comboBox1.Location = new System.Drawing.Point(143, 97);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(121, 20);

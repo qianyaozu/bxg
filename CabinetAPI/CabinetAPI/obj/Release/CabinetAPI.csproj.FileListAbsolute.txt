@@ -20,7 +20,6 @@ D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\System.Web.Http.xml
 D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\System.Web.Http.WebHost.xml
 D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\Dapper.xml
 D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\DapperExtensions.pdb
-D:\github.com\bxg\CabinetAPI\CabinetAPI\obj\Release\CabinetAPI.csprojResolveAssemblyReference.cache
 D:\github.com\bxg\CabinetAPI\CabinetAPI\obj\Release\CabinetAPI.dll
 D:\github.com\bxg\CabinetAPI\CabinetAPI\obj\Release\CabinetAPI.pdb
 D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\Microsoft.Web.Infrastructure.dll
@@ -84,3 +83,7 @@ D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\Microsoft.Extensions.Primitives.xml
 D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\Microsoft.Net.Http.Headers.xml
 D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\System.Diagnostics.DiagnosticSource.xml
 D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\System.Text.Encodings.Web.xml
+D:\github.com\bxg\CabinetAPI\CabinetAPI\bin\CabinetService.exe.config
+D:\github.com\bxg\CabinetAPI\CabinetAPI\obj\Release\CabinetAPI.csprojAssemblyReference.cache
+D:\github.com\bxg\CabinetAPI\CabinetAPI\obj\Release\CabinetAPI.csproj.CoreCompileInputs.cache
+D:\github.com\bxg\CabinetAPI\CabinetAPI\obj\Release\CabinetAPI.csproj.CopyComplete

@@ -133,5 +133,13 @@ namespace CabinetData.Entities
                 return cn.Execute(sql, new { ID = id }) > 0;
             }
         }
+        public static bool Delete(string mac)
+        {
+            var sql = "delete from  Cabinet where AndroidMac=@Mac";
+            using (var cn = Database.GetDbConnection())
+            {
+                return cn.Execute(sql, new { Mac = mac }) > 0;
+            }
+        }
     }
 }

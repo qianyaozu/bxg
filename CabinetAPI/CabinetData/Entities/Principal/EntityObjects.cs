@@ -57,10 +57,20 @@ namespace CabinetData.Entities
 		/// </summary>
 		public DateTime? LastOnlineTime { get; set; }
 
-		/// <summary>
-		/// 
-		/// </summary>
-		public int? Status { get; set; }
+        /// <summary>
+        /// 开关门状态
+        /// </summary>
+        public Boolean? IsOpen { get; set; }
+
+        /// <summary>
+        /// 报警信息
+        /// </summary>
+        public string Alarm { get; set; }
+
+        /// <summary>
+        /// 上次命令码
+        /// </summary>
+        public int? Status { get; set; }
 
 		/// <summary>
 		/// 是否需要确认开门

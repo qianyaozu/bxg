@@ -256,6 +256,51 @@ namespace CabinetAPI.Controllers
             }
         }
 
+
+        /// <summary>
+        /// 删除保险柜接口
+        /// </summary>
+        /// <param name="cabinetID"></param>
+        /// <returns></returns>
+        [HttpPost, Route("api/cabinet/deletemac")]
+        public IHttpActionResult DeleteCabinetByMac(string mac)
+        {
+            if (string.IsNullOrEmpty(mac))
+            {
+                return Failure("未指定保险柜");
+            }
+            try
+            {
+                if (!UserController.LoginDictionary.ContainsKey(GetCookie("token")))
+                    return Logout();
+                UserInfo userCookie = UserController.LoginDictionary[GetCookie("token")];
+                if (userCookie == null)
+                {
+                    return Logout();
+                }
+                SystemLog.Add(new SystemLog
+                {
+                    Action = "DeleteCabinet",
+                    LogContent = userCookie.Name + "-删除保险柜-" + mac,
+                    CreateTime = DateTime.Now,
+                    UserID = userCookie.ID,
+                    RoleID = userCookie.RoleID,
+                    DepartmentID = userCookie.DepartmentID,
+                    ClientIP = GetIP(),
+                    UserName = userCookie.Name,
+                    RealName = userCookie.RealName
+                });
+                if (Cabinet.Delete(mac))
+                    return Success(true);
+                return Failure("删除失败");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex);
+                return Failure("删除失败");
+            }
+        }
+
         /// <summary>
         /// 分页查询保险柜接口
         /// </summary>
@@ -266,7 +311,6 @@ namespace CabinetAPI.Controllers
         {
             try
             {
-
                 if (search == null)
                     return BadRequest();
                 if (search.PageIndex == 0)
@@ -283,17 +327,17 @@ namespace CabinetAPI.Controllers
                 }
 
                 //更新保险柜状态
-                var cabinetList = Cabinet.GetAll().FindAll(m => (m.Status == 1 || m.Status == 4));
-                foreach (var m in cabinetList)
-                {
-                    var log = CabinetLog.GetOpenLog(m.ID);
-                    if (log == null || log.CreateTime.AddSeconds(60) < DateTime.Now)
-                    {
-                        m.Status = 3;
-                        Cabinet.Update(m);
-                        _logger.Info("自动重置关闭");
-                    }
-                }
+                //var cabinetList = Cabinet.GetAll().FindAll(m => (m.Status == 1 || m.Status == 4));
+                //foreach (var m in cabinetList)
+                //{
+                //    var log = CabinetLog.GetOpenLog(m.ID);
+                //    if (log == null || log.CreateTime.AddSeconds(60) < DateTime.Now)
+                //    {
+                //        m.Status = 3;
+                //        Cabinet.Update(m);
+                //        _logger.Info("自动重置关闭");
+                //    }
+                //}
 
                 List<Department> departList = Department.GetAllChildren(userCookie.DepartmentID);
                 if (!string.IsNullOrEmpty(search.DepartmentName))

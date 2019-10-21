@@ -47,18 +47,18 @@ namespace CabinetData.Entities
                 return cn.Query<UserInfo>(sql, new { DepartmentID = departmentID }).ToList();
             }
         }
-        public static Page<UserInfoA> GetUsers(UserSearchModel search,List<int> departList )
+        public static Page<UserInfoA> GetUsers(UserSearchModel search, List<int> departList)
         {
             var sql = "select * from UserInfo where DepartmentID in @DepartmentID ";
             if (!string.IsNullOrEmpty(search.UserName))
             {
                 sql += " and Name like '%" + search.UserName + "%'";
             }
-            if ((search.DepartmentID??0) != 0)
+            if ((search.DepartmentID ?? 0) != 0)
             {
                 sql += " and DepartmentID in (" + string.Join(",", Department.GetAllChildren(search.DepartmentID.Value).Select(m => m.ID).ToList()) + ")";
             }
-            if ((search.RoleID??0) != 0)
+            if ((search.RoleID ?? 0) != 0)
             {
                 sql += " and RoleID = " + search.RoleID;
             }
@@ -92,6 +92,23 @@ namespace CabinetData.Entities
             using (var cn = Database.GetDbConnection())
             {
                 return cn.Execute(sql, new { ID = id }) > 0;
+            }
+        }
+
+
+
+
+
+        public static void AddColumn()
+        {
+            string sql = "IF NOT EXISTS (select name from syscolumns where id=object_id(N'Cabinet') AND NAME='IsOpen') "
+                        + " BEGIN "
+                        + " ALTER TABLE Cabinet ADD IsOpen bit NULL  "
+                        + " ALTER TABLE Cabinet ADD Alarm varchar(50) NULL  "
+                        + " END ";
+            using (var cn = Database.GetDbConnection())
+            {
+                cn.Execute(sql);
             }
         }
 

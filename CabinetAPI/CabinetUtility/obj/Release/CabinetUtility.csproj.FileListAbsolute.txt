@@ -2,4 +2,5 @@ D:\github.com\bxg\CabinetAPI\CabinetUtility\bin\Release\CabinetUtility.dll
 D:\github.com\bxg\CabinetAPI\CabinetUtility\bin\Release\CabinetUtility.pdb
 D:\github.com\bxg\CabinetAPI\CabinetUtility\obj\Release\CabinetUtility.dll
 D:\github.com\bxg\CabinetAPI\CabinetUtility\obj\Release\CabinetUtility.pdb
-D:\github.com\bxg\CabinetAPI\CabinetUtility\obj\Release\CabinetUtility.csprojResolveAssemblyReference.cache
+D:\github.com\bxg\CabinetAPI\CabinetUtility\obj\Release\CabinetUtility.csproj.CoreCompileInputs.cache
+D:\github.com\bxg\CabinetAPI\CabinetUtility\obj\Release\CabinetUtility.csprojAssemblyReference.cache

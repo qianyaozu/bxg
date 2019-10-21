@@ -87,11 +87,18 @@ namespace AndroidTest
                 OperatorType = int.Parse(no),
                 Method = 0,
             };
-            if (cmd.OperatorType == 1)
+            cmd.UserName = "test";
+            if (cmd.OperatorType == 24)
             {
                 cmd.Mac = "213000";
                 cmd.Method = 1;
+                cmd.AuthCode = "eqeq";
             }
+            if (cmd.OperatorType == 40)
+            {
+                cmd.EventContent = "钱耀祖 15000000000";
+            }
+            cmd.Photos = new List<string> { "213000_5de3898d-0096-4b64-8f2a-943ba322e377.png" };
             string result = Command(cmd);
             richTextBox1.AppendText(no + ":" + result + Environment.NewLine);
         }

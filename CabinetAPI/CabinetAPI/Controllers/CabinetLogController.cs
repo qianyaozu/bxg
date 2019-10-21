@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 using System.Web;
 using System.Web.Http;
 
@@ -61,7 +62,7 @@ namespace CabinetAPI.Controllers
                     var depart = Department.GetAll(result.Items.Select(m => m.DepartmentID ?? 0).ToList());
                     result.Items.ForEach(m =>
                     {
-                        m.OperationType = ((m.OperationType == 1 || m.OperationType == 4) ? (int)OperatorTypeEnum.申请开门 : m.OperationType);
+                        m.OperationType =  ((m.OperationType == 1 || m.OperationType == 4) ? (int)OperatorTypeEnum.申请开门 : m.OperationType);
                         m.CabinetName = cabinet.Find(n => n.ID == m.CabinetID)?.Name;
                         m.DepartmentName = depart.Find(n => n.ID == m.DepartmentID)?.Name;
                         m.CabinetCode = cabinet.Find(n => n.ID == m.CabinetID)?.Code;
@@ -75,6 +76,7 @@ namespace CabinetAPI.Controllers
                                 {
                                     req.Photos[i] = ImgToBase64String(req.Photos[i]);
                                 }
+                                m.EventContent = JsonConvert.SerializeObject(req);
                             }
                         }
                     });
@@ -126,31 +128,15 @@ namespace CabinetAPI.Controllers
                 if (userCookie == null)
                     return Logout();
                 List<CommandModel> cmdList = new List<CommandModel>();
-                
-               
-                if (AndroidController.CabinetLogQueue.Count == 0)
-                    return Success(new
-                    {
-                        list = cmdList,
-                        time = time,
-                        msg="queue is empty"
-                    });
-                else
-                {
-                    if (time == "0")
-                    {
-                        return Success(new
-                        {
-                            list = cmdList,
-                            time = AndroidController.CabinetLogQueue.Select(m => m.ID).Max().ToString(),
-                            msg = "first commit"
-                        });
-                    }
-                }
-                _logger.Warn("enter" + AndroidController.CabinetLogQueue.Count);
+                var list = new List<CabinetLog>();
                 int lastID = 0;
                 if (!string.IsNullOrEmpty(time))
                 {
+                    if (time == "0" && AndroidController.CabinetLogQueue.Count>0)
+                    {
+                        time = AndroidController.CabinetLogQueue.Select(m => m.ID).Max().ToString();
+                    }
+
                     try
                     {
                         lastID = Convert.ToInt32(time);
@@ -160,7 +146,37 @@ namespace CabinetAPI.Controllers
                         lastID = 0;
                     }
                 }
-                var list = new List<CabinetLog>();
+                int index = 0;
+                while (index++ < 20)
+                {
+                    if (AndroidController.CabinetLogQueue.Count == 0)
+                    {
+                        Thread.Sleep(1000);
+                    }
+                    else
+                    {
+                        lock (AndroidController.logLock)
+                        {
+                            list = AndroidController.CabinetLogQueue.ToList().FindAll(m => m.ID > lastID);
+                        }
+                        if (list.Count == 0)
+                        {
+                            Thread.Sleep(1000);
+                        }
+                    }
+                }
+
+                if (AndroidController.CabinetLogQueue.Count == 0)
+                    return Success(new
+                    {
+                        list = cmdList,
+                        time = time,
+                        msg="queue is empty"
+                    });
+                
+                //_logger.Warn("enter" + AndroidController.CabinetLogQueue.Count);
+               
+               
 
                 //var departList = Department.GetChildren(userCookie.DepartmentID).Select(m => m.ID).ToList();
                 //departList.Add(userCookie.DepartmentID);
@@ -179,11 +195,11 @@ namespace CabinetAPI.Controllers
                 lock (AndroidController.logLock)
                 {
                     
-                        list = AndroidController.CabinetLogQueue.ToList().FindAll(m => m.ID > lastID);
-                    _logger.Info(lastID + "->符合数量" + list.Count);
+                   list = AndroidController.CabinetLogQueue.ToList().FindAll(m => m.ID > lastID);
+                    //_logger.Info(lastID + "->符合数量" + list.Count);
                     
                 }
-                _logger.Trace( lastID + "->" + string.Join(",", AndroidController.CabinetLogQueue.Select(n => n.ID)) + "->符合数量" + list.Count);
+                //_logger.Trace( lastID + "->" + string.Join(",", AndroidController.CabinetLogQueue.Select(n => n.ID)) + "->符合数量" + list.Count);
                 if (list.Count == 0)
                     return Success(new
                     {
@@ -205,12 +221,27 @@ namespace CabinetAPI.Controllers
                     cmd.OperatorName = m.OperatorName;
                     cmd.OperationType = m.OperationType;
                     cmd.EventContent = m.EventContent;
+                    //if (!string.IsNullOrEmpty(m.EventContent) && m.EventContent.ToLower().Contains("photos"))
+                    //{
+                    //    //有事件
+                    //    CommandRequest req = JsonConvert.DeserializeObject<CommandRequest>(m.EventContent);
+                    //    if (req != null && req.Photos != null && req.Photos.Count > 0)
+                    //    {
+                    //        for (int i = 0; i < req.Photos.Count; i++)
+                    //        {
+                    //            req.Photos[i] = ImgToBase64String(req.Photos[i]);
+                    //        }
+                    //        cmd.EventContent = JsonConvert.SerializeObject(req);
+                    //    }
+                    //}
                     cmd.WindowType = 0;
-                    bool needConfirm = item.NeedConfirm ?? false;//是否需要开门审核
-                    if (m.OperationType == 2 || (m.OperationType == 4 && !needConfirm) || m.OperationType == 5 || m.OperationType == 6 || m.OperationType == 7 || m.OperationType == 8 || m.OperationType == 9 || m.OperationType == 10 || m.OperationType == 14)
-                        cmd.WindowType = 1;
-                    if (m.OperationType == 15 || ((m.OperationType == 1 || m.OperationType == 4) && needConfirm))
+                   
+                    if (m.OperationType == 32 || m.OperationType == 15 || m.OperationType == 24 || m.OperationType == 40)
                         cmd.WindowType = 2;
+                    else if(m.OperationType == 2 || m.OperationType == 4 || m.OperationType == 5 || m.OperationType == 6||
+                    m.OperationType == 7 || m.OperationType == 8 || m.OperationType == 9 || m.OperationType == 10 ||
+                    m.OperationType == 14 || m.OperationType == 30 || m.OperationType == 31 || m.OperationType == 35 || m.OperationType == 50)
+                        cmd.WindowType = 1;
                     cmdList.Add(cmd);
                 });
                 var data = new
@@ -260,7 +291,14 @@ namespace CabinetAPI.Controllers
                 if (userCookie == null)
                     return Logout();
                 _logger.Warn(JsonConvert.SerializeObject(cmd));
-                if (cmd.OperationType == (int)OperatorTypeEnum.允许开门 || cmd.OperationType == (int)OperatorTypeEnum.拒绝开门|| cmd.OperationType == (int)OperatorTypeEnum.接受语音 || cmd.OperationType == (int)OperatorTypeEnum.拒绝语音)
+                if (cmd.OperationType == (int)OperatorTypeEnum.允许开门 
+                    || cmd.OperationType == (int)OperatorTypeEnum.拒绝开门
+                    || cmd.OperationType == (int)OperatorTypeEnum.接受语音 
+                    || cmd.OperationType == (int)OperatorTypeEnum.拒绝语音
+                    || cmd.OperationType == (int)OperatorTypeEnum.允许终端修改信息
+                    || cmd.OperationType == (int)OperatorTypeEnum.拒绝终端修改信息
+                     || cmd.OperationType == (int)OperatorTypeEnum.允许人员注册
+                    || cmd.OperationType == (int)OperatorTypeEnum.拒绝人员注册)
                 {
                     if (AndroidController.CommandDictionary.ContainsKey(cmd.CabinetID))
                         AndroidController.CommandDictionary[cmd.CabinetID] = cmd.OperationType;
@@ -282,7 +320,8 @@ namespace CabinetAPI.Controllers
                     var cab = Cabinet.GetOne(cmd.CabinetID);
                     if (cab != null)
                     {
-                        cab.Status = 3;
+                        cab.Alarm = "";
+                        cab.Status = 23;
                         Cabinet.Update(cab);
                     }
                 }
