@@ -33,7 +33,7 @@ namespace CabinetAPI
             {
                 int.TryParse(pingInterval, out interval);
             }
-            Thread.Sleep(interval*1000);
+            Thread.Sleep(interval*1000); 
             while (true)
             {
                 try
@@ -70,56 +70,56 @@ namespace CabinetAPI
                         if (cabinet.IsOnline ?? false)//在线
                         {
                             //如果保险柜在线，检测是否下线
-                            if (!AndroidController.HeartDictionary.ContainsKey(cabinet.ID) || (AndroidController.HeartDictionary.ContainsKey(cabinet.ID) && AndroidController.HeartDictionary[cabinet.ID].AddSeconds(60) < DateTime.Now))
+                            if (!AndroidController.HeartDictionary.ContainsKey(cabinet.ID) || (AndroidController.HeartDictionary.ContainsKey(cabinet.ID) && AndroidController.HeartDictionary[cabinet.ID].AddSeconds(interval) < DateTime.Now))
                             {
-                                string host = cabinet.IP;
-                                Ping p1 = new Ping();
-                                PingReply reply = p1.Send(host); //发送主机名或Ip地址
-                                if (reply.Status != IPStatus.Success)
+                                //string host = cabinet.IP;
+                                //Ping p1 = new Ping();
+                                //PingReply reply = p1.Send(host); //发送主机名或Ip地址
+                                //if (reply.Status != IPStatus.Success)
+                                //{
+                                logger.Warn("03保险柜在线,心跳不在且ping不通下线" + cabinet.ID + ":" + cabinet.IP);
+                                //offLine.Add(cabinet.ID);
+                                var log = new CabinetData.Entities.CabinetLog
                                 {
-                                    logger.Warn("03保险柜在线,心跳不在且ping不通下线" + cabinet.ID + ":" + cabinet.IP);
-                                    //offLine.Add(cabinet.ID);
-                                    var log = new CabinetData.Entities.CabinetLog
-                                    {
-                                        CabinetID = cabinet.ID,
-                                        DepartmentID = cabinet.DepartmentID,
-                                        OperatorName = "",
-                                        OperateTime = DateTime.Now,
-                                        OperationType = (int)OperatorTypeEnum.下线,
-                                        CreateTime = DateTime.Now,
-                                        CabinetIP = "",
-                                        EventContent = "超时下线"
-                                    };
-                                    logs.Add(log);
-                                    CabinetData.Entities.Cabinet.UpdateOffLine(new List<int> { cabinet.ID });
-                                    lock (AndroidController.logLock)
-                                    {
-                                        AndroidController.msgID++;
-                                        log.ID = AndroidController.msgID;
-                                        AndroidController.CabinetLogQueue.Add(log);
-                                    }
-                                    DateTime dt;
-                                    AndroidController.HeartDictionary.TryRemove(cabinet.ID, out dt);
+                                    CabinetID = cabinet.ID,
+                                    DepartmentID = cabinet.DepartmentID,
+                                    OperatorName = "",
+                                    OperateTime = DateTime.Now,
+                                    OperationType = (int)OperatorTypeEnum.下线,
+                                    CreateTime = DateTime.Now,
+                                    CabinetIP = "",
+                                    EventContent = "超时下线"
+                                };
+                                logs.Add(log);
+                                CabinetData.Entities.Cabinet.UpdateOffLine(new List<int> { cabinet.ID });
+                                lock (AndroidController.logLock)
+                                {
+                                    AndroidController.msgID++;
+                                    log.ID = AndroidController.msgID;
+                                    AndroidController.CabinetLogQueue.Add(log);
                                 }
+                                DateTime dt;
+                                AndroidController.HeartDictionary.TryRemove(cabinet.ID, out dt);
+                                //}
                             }
                         }
                         else
                         {
-                            if (AndroidController.HeartDictionary.ContainsKey(cabinet.ID) && AndroidController.HeartDictionary[cabinet.ID].AddSeconds(60) > DateTime.Now)//如果存在
+                            if (AndroidController.HeartDictionary.ContainsKey(cabinet.ID) && AndroidController.HeartDictionary[cabinet.ID].AddSeconds(interval) > DateTime.Now)//如果存在
                             {
                                 logger.Warn("01保险柜不在线,心跳上线" + cabinet.ID + ":" + cabinet.IP);
                                 isOnline = true;
                             }
                             else
                             {
-                                string host = cabinet.IP;
-                                Ping p1 = new Ping();
-                                PingReply reply = p1.Send(host); //发送主机名或Ip地址
-                                if (reply.Status == IPStatus.Success)
-                                {
-                                    logger.Warn("02保险柜不在线,ping上线" + cabinet.ID + ":" + cabinet.IP);
-                                    isOnline = true;
-                                }
+                                //string host = cabinet.IP;
+                                //Ping p1 = new Ping();
+                                //PingReply reply = p1.Send(host); //发送主机名或Ip地址
+                                //if (reply.Status == IPStatus.Success)
+                                //{
+                                //    logger.Warn("02保险柜不在线,ping上线" + cabinet.ID + ":" + cabinet.IP);
+                                //    isOnline = true;
+                                //}
                             }
                             if (isOnline)
                             {
@@ -144,7 +144,7 @@ namespace CabinetAPI
                                     AndroidController.CabinetLogQueue.Add(log);
                                 }
                             }
-                            
+
                         } 
                     }
                     if (logs.Count > 0)
@@ -156,7 +156,7 @@ namespace CabinetAPI
                 }
                 finally
                 {
-                    Thread.Sleep(interval*1000);
+                    Thread.Sleep(3000);
                 }
             }
         }

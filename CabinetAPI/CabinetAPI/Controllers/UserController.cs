@@ -8,6 +8,7 @@ using NLog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
@@ -51,6 +52,17 @@ namespace CabinetAPI.Controllers
                 return Failure("用户名不存在");
             if (string.IsNullOrEmpty(model.UserName) || string.IsNullOrEmpty(model.Password))
                 return Failure("用户名或密码不得为空");
+           
+            //var serial = ConfigurationManager.AppSettings["SerialNumber"];
+            //if (string.IsNullOrEmpty(serial))
+            //{
+            //    return Failure("请联系销售获取产品序列号");
+            //}
+            //DateTime dt = DateTime.Now;
+            //if (!DateTime.TryParse(AESAlgorithm.Decrypto(serial),out dt)||dt < DateTime.Now)
+            //{
+            //    return Failure("序列号已经过期，请联系销售获取最新序列号");
+            //}
             try
             {
                 lock (ContinueErrorPassword)

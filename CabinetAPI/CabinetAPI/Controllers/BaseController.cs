@@ -33,6 +33,16 @@ namespace CabinetAPI.Controllers
             };
             return Json<dynamic>(result);
         }
+        public JsonResult<dynamic> Success1(object data ,string message)
+        {
+            var result = new
+            {
+                State = 1,
+                Message = message,
+                Data = data
+            };
+            return Json<dynamic>(result);
+        }
         //[HiddenApi]
         /// <summary>
         /// 返回失败数据

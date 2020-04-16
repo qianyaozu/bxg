@@ -25,7 +25,7 @@ namespace CabinetData.Entities
         {
             using (var cn = Database.GetDbConnection())
             {
-                cn.Execute("update Cabinet set IsOnline=0 where ID in @ID", new { ID = ids });
+                cn.Execute("update Cabinet set IsOnline=0,alarm='обоъ' where ID in @ID", new { ID = ids });
             }
         }
 

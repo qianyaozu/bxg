@@ -68,15 +68,12 @@ namespace AndroidTest
             {
                 OperatorType = 17,
             };
-            for (;;)
+
+            string result = Command(cmd);
+            this.Invoke(new Action(delegate
             {
-                string result = Command(cmd);
-                this.Invoke(new Action(delegate
-                {
-                    richTextBox1.AppendText(17 + ":" + result + Environment.NewLine);
-                }));
-                Thread.Sleep(20000);
-            }
+                richTextBox1.AppendText(17 + ":" + result + Environment.NewLine);
+            }));
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -114,6 +111,11 @@ namespace AndroidTest
             Thread th = new Thread(Heart);
             th.IsBackground = true;
             th.Start();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            Heart();
         }
     }
 }

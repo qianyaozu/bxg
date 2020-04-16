@@ -62,7 +62,7 @@ namespace CabinetAPI.Controllers
                     var depart = Department.GetAll(result.Items.Select(m => m.DepartmentID ?? 0).ToList());
                     result.Items.ForEach(m =>
                     {
-                        m.OperationType =  ((m.OperationType == 1 || m.OperationType == 4) ? (int)OperatorTypeEnum.申请开门 : m.OperationType);
+                        m.OperationType = m.OperationType;
                         m.CabinetName = cabinet.Find(n => n.ID == m.CabinetID)?.Name;
                         m.DepartmentName = depart.Find(n => n.ID == m.DepartmentID)?.Name;
                         m.CabinetCode = cabinet.Find(n => n.ID == m.CabinetID)?.Code;
@@ -132,9 +132,12 @@ namespace CabinetAPI.Controllers
                 int lastID = 0;
                 if (!string.IsNullOrEmpty(time))
                 {
-                    if (time == "0" && AndroidController.CabinetLogQueue.Count>0)
+                    if (time == "0")
                     {
-                        time = AndroidController.CabinetLogQueue.Select(m => m.ID).Max().ToString();
+                        if (AndroidController.CabinetLogQueue.Count > 0)
+                            time = AndroidController.CabinetLogQueue.Select(m => m.ID).Max().ToString();
+                        else
+                            time = "1";
                     }
 
                     try
@@ -221,6 +224,7 @@ namespace CabinetAPI.Controllers
                     cmd.OperatorName = m.OperatorName;
                     cmd.OperationType = m.OperationType;
                     cmd.EventContent = m.EventContent;
+                    cmd.AuthCode = m.Remark;
                     //if (!string.IsNullOrEmpty(m.EventContent) && m.EventContent.ToLower().Contains("photos"))
                     //{
                     //    //有事件
@@ -300,10 +304,18 @@ namespace CabinetAPI.Controllers
                      || cmd.OperationType == (int)OperatorTypeEnum.允许人员注册
                     || cmd.OperationType == (int)OperatorTypeEnum.拒绝人员注册)
                 {
-                    if (AndroidController.CommandDictionary.ContainsKey(cmd.CabinetID))
-                        AndroidController.CommandDictionary[cmd.CabinetID] = cmd.OperationType;
-                    else
-                        AndroidController.CommandDictionary.TryAdd(cmd.CabinetID, cmd.OperationType);
+                    string authcode = cmd.AuthCode;
+                    lock (AndroidController.CommandDictionaryLock)
+                    {
+
+                        AndroidController.CommandDictionary.Add(new CommandResponse { OperationType = cmd.OperationType, AuthCode = cmd.AuthCode, ID = cmd.CabinetID, CreateTime = DateTime.Now });
+                        
+                         
+                    }
+                    //if (AndroidController.CommandDictionary.ContainsKey(cmd.CabinetID))
+                    //    AndroidController.CommandDictionary[cmd.CabinetID] =new CommandResponse { OperationType= cmd.OperationType ,AuthCode=authcode} ;
+                    //else
+                    //    AndroidController.CommandDictionary.TryAdd(cmd.CabinetID, new CommandResponse { OperationType = cmd.OperationType, AuthCode = authcode });
                 }
                 CabinetLog log = new CabinetLog();
                 log.CabinetID = cmd.CabinetID;
